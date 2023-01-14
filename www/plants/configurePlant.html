@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Plant manager</title>
+        <script src="lib.js"></script>
+        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="style.css">
+        <meta http-Equiv="Cache-Control" Content="no-cache" />
+        <meta http-Equiv="Pragma" Content="no-cache" />
+        <meta http-Equiv="Expires" Content="0" />
+    </head>
+    <body onload="
+                PLANTIDPARAM = 'plant';
+                PARAMS = getURIParameters();
+                CREATENEW = !PARAMS.has(PLANTIDPARAM);
+
+
+                //python types
+                PUMPTYPE = GPIOPUMPTYPE;
+                SENSORTYPE = MIFLORAPLANTSENSORTYPE;
+
+                var sensorTemplateRow = document.getElementById('sensorOption');
+                document.getElementById('miFloraPlantSensors').innerHTML = '';
+                
+                var gpioTemplateRow = document.getElementById('pumpOption');
+                document.getElementById('gpioPumps').innerHTML = '';
+
+                console.log('Polling new data...');
+
+                if(CREATENEW){
+                    document.getElementById('submitButton').value = 'Create';
+                }else{
+                    document.getElementById('submitButton').value = 'Change';
+                }
+
+
+                function loadPlant(){
+                    if(!CREATENEW){
+                        var table = document.getElementById('dataTable');
+                        var status = document.getElementById('status');
+                        var display = table.style.display;
+
+                        status.style.display = '';
+                        table.style.display = 'none';
+                        console.log('Loading plant: ' + PARAMS.get(PLANTIDPARAM));
+
+                        updatePlant(document.getElementById('dataTable'), PARAMS.get(PLANTIDPARAM), 'plant', (success)=>{
+                            if(success){
+                                var sensorTypesSelect = document.getElementById('sensorTypes');
+                                var pumpTypesSelect = document.getElementById('pumpTypes');
+                                var sensorType = document.getElementById('sensorType').value;
+                                var pumpType = document.getElementById('pumpType').value;
+
+                                //MIFLORAPLANTSENSORTYPE
+                                //GPIOPUMPTYPE
+                                success = selectValue(sensorTypesSelect, sensorType);
+                                if(success){
+                                    success = selectValue(pumpTypesSelect, pumpType);
+                                    if(success){
+                                        success = false;
+                                        if(sensorType == MIFLORAPLANTSENSORTYPE){
+                                            success = selectValue(document.getElementById('miFloraPlantSensors'), document.getElementById('sensorId').value);
+                                        }
+                                        if(success){
+                                            success = false;
+                                            if(pumpType == GPIOPUMPTYPE){
+                                                success = selectValue(document.getElementById('gpioPumps'), document.getElementById('pumpId').value);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if(!success){
+                                console.log('Could not load plant data for: ' + PARAMS.get(PLANTIDPARAM));
+                                status.dataset.pollStatus = 'inactive';
+                                status.innerHTML = 'Failed';
+                            }
+                            else{
+                                status.dataset.pollStatus = 'active';
+                                status.innerHTML = 'Success';
+                                table.style.display = display;
+                            }
+                            function fadeOut(){
+                                //TODO set class to not fade out
+                                status.style.display = 'none';
+                            }
+                            //TODO set class to fade out
+                            excecuteOnceAfter(fadeOut, 1000);
+                        })
+                    }
+                }
+
+                SENSORSUPDATED = false;
+                GPIOSUPDATED = false;
+                //TODO eliminate race condition, use jquery $.when(updateSensors,updateGPIOs).done(loadPlant())
+                updateSensors(document.getElementById('miFloraPlantSensors'), sensorTemplateRow, 'data', '', ()=>{
+                    if(CREATENEW){
+                        defaultRow = sensorTemplateRow.cloneNode();
+                        defaultRow.innerHTML = 'Select...';
+                        defaultRow.value = '';
+                        defaultRow.disabled = 'disabled';
+                        defaultRow.selected = 'selected';
+                        //console.log(defaultRow)
+                        document.getElementById('miFloraPlantSensors').appendChild(defaultRow);
+                        updateSelect(document.getElementById('miFloraPlantSensors'), 'color');
+                    }
+                    SENSORSUPDATED = true;
+                    if(SENSORSUPDATED && GPIOSUPDATED){
+                        loadPlant();
+                    }
+                }, true);
+                
+                updateGPIOs(document.getElementById('gpioPumps'), gpioTemplateRow, 'data', '', ()=>{
+                    if(CREATENEW){
+                        defaultRow = gpioTemplateRow.cloneNode();
+                        defaultRow.innerHTML = 'Select...';
+                        defaultRow.value = '';
+                        defaultRow.disabled = 'disabled';
+                        defaultRow.selected = 'selected';
+                        //console.log(defaultRow)
+                        document.getElementById('gpioPumps').appendChild(defaultRow);
+                        updateSelect(document.getElementById('gpioPumps'), 'color');
+                    }
+                    GPIOSUPDATED = true;
+                    if(SENSORSUPDATED && GPIOSUPDATED){
+                        loadPlant(); 
+                    }
+                }, true);
+                
+                
+    ">
+        <h1>New Plant</h1>
+        <div style="display:hidden;">
+            <span id="oldSensorID" style="display:hidden;" data-poll="plant_sensor_id" data-poll-populate="innerHTML"></span>
+            <span id="oldSensorType" style="display:hidden;" data-poll="plant_sensor_type" data-poll-populate="innerHTML"></span>
+            
+            <span id="oldPumpID" style="display:hidden;" data-poll="plant_pump_id" data-poll-populate="innerHTML"></span>
+            <span id="oldPumpType" style="display:hidden;" data-poll="plant_pump_type" data-poll-populate="innerHTML"></span>   
+        </div>
+
+        <table id="dataTable">
+            <tbody>
+                <tr>
+                    <td>Name</td>
+                    <td colspan="2"><input id="name" class="maxWidth" type="text" placeholder="Enter name..." data-poll="plant_configuration_name" data-poll-populate="value"/></td>
+                </tr>
+                <tr>
+                    <td>Temperature span</td>
+                    <td><input id="temperatureMin" class="maxWidth" type="text" value="50" data-poll="plant_configuration_temperature_min" data-poll-populate="value" /></td>
+                    <td><input id="temperatureMax" class="maxWidth" type="text" value="100" data-poll="plant_configuration_temperature_max" data-poll-populate="value" /></td>
+                </tr>
+                <tr>
+                    <td>Moisture span</td>
+                    <td><input id="moistureMin" class="maxWidth" type="text" value="50" data-poll="plant_configuration_moisture_min" data-poll-populate="value" /></td>
+                    <td><input id="moistureMax" class="maxWidth" type="text" value="100" data-poll="plant_configuration_moisture_max" data-poll-populate="value" /></td>
+                </tr>
+                <tr>
+                    <td>Light span</td>
+                    <td><input id="lightMin" class="maxWidth" type="text" value="50" data-poll="plant_configuration_light_min" data-poll-populate="value" /></td>
+                    <td><input id="lightMax" class="maxWidth" type="text" value="100" data-poll="plant_configuration_light_max" data-poll-populate="value" /></td>
+                </tr>
+                <tr>
+                    <td>Conductivity span</td>
+                    <td><input id="conductivityMin" class="maxWidth" type="text" value="50" data-poll="plant_configuration_conductivity_min" data-poll-populate="value" /></td>
+                    <td><input id="conductivityMax" class="maxWidth" type="text" value="100" data-poll="plant_configuration_conductivity_max" data-poll-populate="value" /></td>
+                </tr>
+                <tr>
+                    <td>Sensor</td>
+                    <td>
+                        <input id="sensorType" style="display:none;" type="text" value="" data-poll="plant_sensor_type" data-poll-populate="value"/>
+                        <select id="sensorTypes" class="maxWidth">
+                            <!--TODO add other sensor type select-->
+                            <option id="sensorTypeMiFloraPlantSensor" value="MiFloraPlantSensor" selected="selected">MiFlora Plantsensor</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input id="sensorId" style="display:none;" type="text" value="" data-poll="plant_sensor_id" data-poll-populate="value"/>
+                        <select id="miFloraPlantSensors" class="maxWidth" onchange="updateSelect(this, 'color');">
+                            <option id="sensorOption" style="display:none;" data-poll="data_mac">Polling...</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Pump</td>
+                    <td>
+                        <input id="pumpType" style="display:none;" type="text" value="" data-poll="plant_pump_type" data-poll-populate="value"/>
+                        <select id="pumpTypes" class="maxWidth">
+                            <!--TODO add other pump type select-->
+                            <option id="pumpTypeGPIOPump" value="GPIOPump" selected="selected">GPIO Pump</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input id="pumpId" style="display:none;" type="text" value="" data-poll="plant_pump_id" data-poll-populate="value"/>
+                        <select id="gpioPumps" class="maxWidth" name="pump" onchange="updateSelect(this, 'color');">
+                            <option id="pumpOption" style="display:none;" data-poll="data_port">Polling...</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div id="status" style="display:none;" data-poll-status="polling">Processing...</div>
+
+        <input id="submitButton" type="button" value="Create" onclick="
+            //var table = document.getElementById('dataTable');
+            var status = document.getElementById('status');
+            //table.style.display = 'none';
+            status.style.display = 'block';
+            
+            function fadeOut(){
+                //TODO only excecute when the button is not pressed again
+                //TODO set class to not fade out
+                status.style.display = 'none';
+            }
+            if(CREATENEW){
+                createPlant(document.getElementById('dataTable'), (success)=>{
+                    if(success){
+                        status.innerHTML = 'Success';
+                        status.dataset.pollStatus = 'active';
+                    }else{
+                        status.innerHTML = 'Failed';
+                        status.dataset.pollStatus = 'inactive';
+                    }
+                    //TODO set class to fade out
+                    excecuteOnceAfter(fadeOut, 1000);
+                });
+
+            }else{
+                changePlant(document.getElementById('dataTable'), PARAMS.get(PLANTIDPARAM), (success)=>{
+                    if(success){
+                        status.innerHTML = 'Success';
+                        status.dataset.pollStatus = 'active';
+                    }else{
+                        status.innerHTML = 'Failed';
+                        status.dataset.pollStatus = 'inactive';
+                    }
+                    //TODO set class to fade out
+                    excecuteOnceAfter(fadeOut, 1000);
+                });
+            }
+        "/>
+    </body>
+</html>

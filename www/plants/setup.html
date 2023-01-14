@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Plant manager</title>
+        <script src="lib.js"></script>
+        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="style.css">
+        <meta http-Equiv="Cache-Control" Content="no-cache" />
+        <meta http-Equiv="Pragma" Content="no-cache" />
+        <meta http-Equiv="Expires" Content="0" />
+        <link href="/fontawesome/css/fontawesome.css" rel="stylesheet">
+        <link href="/fontawesome/css/brands.css" rel="stylesheet">
+        <link href="/fontawesome/css/solid.css" rel="stylesheet">
+        <link href="/fontawesome/css/regular.css" rel="stylesheet">
+    </head>
+    <body onload="
+        var templateRow = document.getElementById('plantConfig');
+        document.getElementById('setupTable_body').innerHTML = '';
+
+        console.log('Polling new data...');
+        updateSetup(document.getElementById('setupTable_body'),templateRow, 'data');
+        checkPlantmanager(document.getElementById('plantmanagerStatus'));
+
+        setInterval(function() {
+            console.log('Polling new data...');
+            updateSetup(document.getElementById('setupTable_body'),templateRow, 'data');
+            checkPlantmanager(document.getElementById('plantmanagerStatus'));
+        }, 5000);
+    ">
+        <h1 class="center">Plant manager status:<span id="plantmanagerStatus">Polling...</span></h1>
+        <br />
+        <div class="center">
+            <input type="button" onclick="startPlantmanager(document.getElementById('plantmanagerStatus'))" value="Start"/>
+            <input type="button" onclick="stopPlantmanager(document.getElementById('plantmanagerStatus'))" value="Stop"/>
+        </div>
+        <input type="button" onclick="window.location='configurePlant.html'" value="New plant"/>
+        <br />
+
+        <h1>Current setup</h1>
+
+        <table id="setupTable" class="maxWidth">
+            <thead class="maxWidth">
+                <tr>
+                    <th colspan="5">Plant</th>
+                    <th rowspan="2">Sensor ID</th>
+                    <th rowspan="2">Pump ID</th>
+                    <th colspan="2" rowspan="2"></th>
+                </tr>
+                <tr>
+                    <th>Name</th>
+                    <th>Light span</th>
+                    <th>Moisture span</th>
+                    <th>Conductvity span</th>
+                    <th>Temperature span</th>
+                </tr>
+            </thead>
+            <tbody id="setupTable_body" class="maxWidth">
+                <tr id="plantConfig" style="display:none;">
+                    <td><span data-poll="data_configuration_name" data-poll-populate="innerHTML">ERROR</span></td>
+                    <td><span data-poll="data_configuration_light_min" data-poll-populate="innerHTML">ERROR</span>-<span data-poll="data_configuration_light_max" data-poll-populate="innerHTML">ERROR</span></td>
+                    <td><span data-poll="data_configuration_moisture_min" data-poll-populate="innerHTML">ERROR</span>-<span data-poll="data_configuration_moisture_max" data-poll-populate="innerHTML">ERROR</span></td>
+                    <td><span data-poll="data_configuration_conductivity_min" data-poll-populate="innerHTML">ERROR</span>-<span data-poll="data_configuration_conductivity_max" data-poll-populate="innerHTML">ERROR</span></td>
+                    <td><span data-poll="data_configuration_temperature_min" data-poll-populate="innerHTML">ERROR</span>-<span data-poll="data_configuration_temperature_max" data-poll-populate="innerHTML">ERROR</span></td>
+                    <td data-poll="data_sensor_id" data-poll-populate="innerHTML">
+                        ERROR
+                    </td>
+                    <td data-poll="data_pump_id" data-poll-populate="innerHTML">
+                        ERROR
+                    </td>
+                    <td>
+                        <a onclick="window.location = 'configurePlant.html?plant=' + this.parentElement.parentElement.querySelector('[data-poll=data_configuration_name]').innerHTML;"><i class="fa-solid fa-gear"></i></a>
+                    </td>
+                    <td>
+                        <a id="trashButton" onclick="switchDisplay(this, document.getElementById('trashButtonConfirm')); excecuteOnceAfter(() => {switchDisplay(this, document.getElementById('trashButtonConfirm'))}, 1000);"><i class="fa-solid fa-trash-can"></i></a>
+                        <a id="trashButtonConfirm" onclick="
+                            deletePlant(this.parentElement.parentElement.querySelector('[data-poll=data_configuration_name]').innerHTML);
+                            //TODO show success / delete plant and reload?
+                        " style="display:none;"><i class="fa-solid fa-trash-can-arrow-up"></i></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Plant manager</title>
+        <script src="lib.js"></script>
+        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="style.css">
+        <meta http-Equiv="Cache-Control" Content="no-cache" />
+        <meta http-Equiv="Pragma" Content="no-cache" />
+        <meta http-Equiv="Expires" Content="0" />
+    </head>
+    <body onload="
+                var templateRow = document.getElementById('sensor');
+                document.getElementById('sensorTable_body').innerHTML = '';
+
+                console.log('Polling new data...');
+                checkBluetooth(document.getElementById('bluetoothStatus'));
+                updateSensors(document.getElementById('sensorTable_body'), templateRow, 'data');
+
+                setInterval(function() {
+                    console.log('Polling new data...');
+                    updateSensors(document.getElementById('sensorTable_body'), templateRow, 'data');
+                    checkBluetooth(document.getElementById('bluetoothStatus'));
+                }, 5000);
+    ">
+        <h1 class="center">Bluetooth status:<span id="bluetoothStatus">Polling...</span></h1>
+        <br />
+        <div class="center">
+            <input type="button" onclick="startBluetooth(document.getElementById('bluetoothStatus'))" value="Start"/>
+            <input type="button" onclick="stopBluetooth(document.getElementById('bluetoothStatus'))" value="Stop"/>
+        </div>
+        <br />
+        <h1>Available sensors</h1>
+        <!--TODO show if sensor is used-->
+        <table id="sensorTable" class="maxWidth">
+            <thead class="maxWidth">
+                <tr>
+                    <th>Mac</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody id="sensorTable_body" class="maxWidth">
+                <tr id="sensor" style="display:none;">
+                    <td data-poll="data_mac" data-poll-populate="innerHTML">ERROR</td>
+                    <td data-poll="data_name" data-poll-populate="innerHTML">ERROR</td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>
