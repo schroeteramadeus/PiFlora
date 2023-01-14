@@ -52,7 +52,7 @@ TODO add image of setup
 
 - For the saving location you can just press enter
 
-- open your webbrowser and either use <your ip adress or localhost>:8080
+- open your webbrowser and either use [your ip adress or localhost]:8080
 
 - if you encounter non-trivial problems consult the help page
 
