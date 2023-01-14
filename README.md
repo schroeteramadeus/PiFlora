@@ -18,7 +18,7 @@ WARNING: Debug mode will trigger on ALL other systems - (on the webpage) descern
 
 - make sure bluetooth is available (especially the command "sudo hcitool lescan")
 
-### Example hardware setup 1
+### Example hardware setup (simplest)
 
 - raspberry pi (3)
 
@@ -26,7 +26,7 @@ WARNING: Debug mode will trigger on ALL other systems - (on the webpage) descern
 
 TODO add image of setup
 
-### Example hardware setup 2
+### Example hardware setup (advanced)
 
 - raspberry pi (3)
 
