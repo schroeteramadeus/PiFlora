@@ -22,7 +22,7 @@ def main():
     webServer = HybridServer((HOSTNAME, SERVERPORT), RequestHandlerClass=ServerRequestHandler,virtualRootFile=ROOTFILE, serviceableFileExtensions=SERVEABLEFILEEXTENSIONS, standardpath=STANDARDPATH)
 
 
-    #activate SSL (HTTPS)
+    #TODO activate SSL (HTTPS)
 
     #webServer.socket = ssl.wrap_socket (webServer.socket, 
     #    keyfile="path/to/key.pem", 

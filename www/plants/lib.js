@@ -211,7 +211,6 @@ function updatePlant(dataElement, plantName, prefix, readyFunc = (success)=>{}){
     xhttp.open("GET", HOST + PLANTMANAGERSERVICEPATH + "/plants?filter=" + filter, true);
     xhttp.send();
 }
-//TODO send pump and sensor type if it needs to be created
 //TODO check data?
 function createPlant(dataElement, readyFunc = (success)=>{}){
     var xhttp = new XMLHttpRequest();
@@ -277,6 +276,7 @@ function createPlant(dataElement, readyFunc = (success)=>{}){
     //console.log(JSON.stringify(data));
     xhttp.send(JSON.stringify(data));
 }
+//TODO check data?
 //TODO optimize (only send data that changed)
 function changePlant(dataElement, plantName, readyFunc = (success)=>{}){
     var xhttp = new XMLHttpRequest();
