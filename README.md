@@ -6,7 +6,7 @@ Frontend: Standard HTML, CSS, JS utilizing ajax for data polling and simple conf
 
 For (normal) use on a linux environment with enabled bluetooth and miflora plant sensors. Preferable is raspberry pi (3) for gpio and additional hardware support.
 
-WARNING: Debug mode will trigger on ALL other systems - (on the webpage) descernable by the multicolored yellow status bar on the services (e.g red-yellow), see help page for more info
+WARNING: Debug mode will trigger on ALL other systems for bluetooth manager and on systems that do not have miflora installed for the plant manager - (on the webpage) descernable by the multicolored yellow status bar on the services (e.g red-yellow), see help page for more info
 
 ### Example software setup
 
@@ -46,4 +46,14 @@ TODO add image of setup
 
 ## Configuration via web
 
-TODO
+- Start the webserver on via "python3 startWebserver.py"
+
+- Put in the working directory "www"
+
+- For the saving location you can just press enter
+
+- open your webbrowser and either use <your ip adress or localhost>:8080
+
+- if you encounter non-trivial problems consult the help page
+
+NOTE: on debug mode the server will NOT save any changes after it was closed, also in order to change, add or delete plants the plant manager needs to be stopped first
