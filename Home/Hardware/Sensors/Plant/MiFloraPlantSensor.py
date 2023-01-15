@@ -76,7 +76,7 @@ class MiFloraPlantSensor(P.PlantSensor):
         #type: (int) -> dict[str,object]
         output = {}
         currentTime = time.time()
-        if self.IsDebug:
+        if not self.IsDebug:
             output = {
                 P.PlantSensorParameters.BATTERY: self.__poller.parameter_value(MI_BATTERY),
                 P.PlantSensorParameters.TEMPERATURE: 0.0,

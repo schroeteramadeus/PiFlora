@@ -96,6 +96,7 @@ class BluetoothManager:
         while True:
             if cancellationToken.is_set():
                 break
+            newAvailableDevices = [] #type: list[dict[str,str]]
             deviceScanTask = None #type:subprocess.Popen
             logger.info("Starting new bluetooth scan...")
             while deviceScanTask == None:
@@ -143,15 +144,17 @@ class BluetoothManager:
                             'mac' : mac,
                             'name' : name,
                         }
-                        with BluetoothManager.__availableDevicesLock:
-                            if device not in BluetoothManager.__availableDevices:
-                                BluetoothManager.__availableDevices.append(device)
+                        if device not in newAvailableDevices:
+                            newAvailableDevices.append(device)
                         #TODO maybe delete older not found devices?
                         logger.debug("Device " + name + " [" + mac + "] added")
                     else:
                         logger.debug("Bluetooth manager: Line ignored")
                     if cancellationToken.is_set():
                         break
+                
+                with BluetoothManager.__availableDevicesLock:
+                    BluetoothManager.__availableDevices = newAvailableDevices
 
                 if not cancellationToken.is_set():
                     logger.debug("Bluetooth manager: Sleep")
