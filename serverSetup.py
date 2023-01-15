@@ -13,7 +13,7 @@ import Home.Plants.PlantManager as PM
 from Home.Plants.Plant import Plant
 from Home.Plants.PlantConfiguration import PlantConfiguration
 from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensor, PlantSensorParameters as PSP
-from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor as MiFloraPlantSensor
+from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import debugMode as MiFloraDebugMode, MiFloraPlantSensor as MiFloraPlantSensor
 from Home.Utils.ValueSpan import ValueSpan
 
 STANDARDPATH = "index.html"
@@ -23,7 +23,7 @@ SERVERPORT = 8080
 TITLE = "Home"
 SERVEABLEFILEEXTENSIONS = (".html", ".htm", ".ico", ".png", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min")
 
-if MiFloraPlantSensor.IsDebug:
+if MiFloraDebugMode:
     PM.debugMode = True
 
 PLANTMANAGER = PlantManager(AlwaysActiveWaterSensor())

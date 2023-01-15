@@ -19,6 +19,8 @@ import time
 import Home.Hardware.BluetoothManager as BM
 import Home.Hardware.Sensors.Plant.PlantSensor as P
 
+debugMode = not _importResolved
+
 #TODO add debug mode
 class MiFloraPlantSensor(P.PlantSensor):
     
@@ -34,7 +36,7 @@ class MiFloraPlantSensor(P.PlantSensor):
 
         if not self._id in MiFloraPlantSensor.__usedSensors:
             self.__usedSensors.append(self._id)
-            self.UpdateDebugMode(not _importResolved)
+            self.UpdateDebugMode(debugMode)
         else:
             raise ConnectionAbortedError("Not a valid sensor or already used")
     
