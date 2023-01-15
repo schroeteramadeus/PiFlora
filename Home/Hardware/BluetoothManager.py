@@ -6,6 +6,8 @@ import queue
 import sys
 import logging
 from sys import platform
+
+from Home.Utils.WakeableSleep import WakeableSleep
 #"Singleton"
 
 logger = logging.getLogger(__name__)
@@ -154,7 +156,7 @@ class BluetoothManager:
                 if not cancellationToken.is_set():
                     logger.debug("Bluetooth manager: Sleep")
                     #no new data
-                    time.sleep(60)
+                    WakeableSleep(cancellationToken, 60)
                 else:
                     break
             else:
