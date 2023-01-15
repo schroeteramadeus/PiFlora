@@ -46,7 +46,7 @@ class BluetoothManager:
             debug = debugMode #threadsafety (hopefully)
             if not debug:
                 BluetoothManager.__deviceFetchTaskCancellationToken = threading.Event()
-                BluetoothManager.__deviceFetchTask = threading.Thread(target=BluetoothManager.__fetchScanData, args=[BluetoothManager.__deviceFetchTaskCancellationToken, BluetoothManager.__availableDevicesQueue, BluetoothManager.__availableDevicesLock, 10])
+                BluetoothManager.__deviceFetchTask = threading.Thread(target=BluetoothManager.__fetchScanData, args=[BluetoothManager.__deviceFetchTaskCancellationToken, 10])
                 BluetoothManager.__deviceFetchTask.start()
             
             BluetoothManager.__startedInDebugMode = debug

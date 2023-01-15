@@ -10,9 +10,9 @@ def main():
     else:
         os.chdir(dir)
 
-    saveFile = input("Saving file (Press enter, to use " + dir + "\\save.conf): ")
+    saveFile = input("Saving file (Press enter, to use " + dir + "/save.conf): ")
     if saveFile == "":
-        saveFile = os.getcwd() + "\\save.conf"
+        saveFile = os.getcwd() + "/save.conf"
     elif not os.path.isfile(saveFile):
         raise AttributeError(saveFile + " does not exist or is not a file.")
 
