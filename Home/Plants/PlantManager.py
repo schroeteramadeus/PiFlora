@@ -342,7 +342,9 @@ class PlantManager:
                 for plant in plants:
                     for error in currentErrors[plant]:
                         errorTime = currentErrors[plant][error]
-                        if errorTime + self.__criticalInterval >= t:
+                        if t >= errorTime + self.__criticalInterval:
+                            if not error in errors:
+                                errors[error] = {}
                             errors[error][plant] = errorTime
                         else:
                             #no action needed
@@ -353,31 +355,31 @@ class PlantManager:
                 for error in errors:
                     errorPlants = errors[error]
                     if error == PSP.BATTERY:
-                        self.__logger.debug("Plant manager fixing low battery...")
+                        self.__logger.debug("Plant manager fixing low battery on [" + sensor.ID + "]...")
                         if len(self.__onBatteryError) > 0:
                             self.__onBatteryError(self, plants, sensorData, error, errorPlants, self.__logger)
                         else:
                             self.__logger.critical("Plant manager can not fix battery")
                     elif error == PSP.CONDUCTIVITY:
-                        self.__logger.debug("Plant manager fixing conductivity...")
+                        self.__logger.debug("Plant manager fixing conductivity on [" + sensor.ID + "]...")
                         if len(self.__onConductivityError) > 0:
                             self.__onConductivityError(self, plants, sensorData, error, errorPlants, self.__logger)
                         else:
                             self.__logger.critical("Plant manager can not fix conductivity")
                     elif error == PSP.LIGHT:
-                        self.__logger.debug("Plant manager fixing light...")
+                        self.__logger.debug("Plant manager fixing light on [" + sensor.ID + "]...")
                         if len(self.__onLightError) > 0:
                             self.__onLightError(self, plants, sensorData, error, errorPlants, self.__logger)
                         else:
                             self.__logger.critical("Plant manager can not fix light")
                     elif error == PSP.MOISTURE:
-                        self.__logger.debug("Plant manager fixing moisture...")
+                        self.__logger.debug("Plant manager fixing moisture on [" + sensor.ID + "]...")
                         if len(self.__onWaterError) > 0:
                             self.__onWaterError(self, plants, sensorData, error, errorPlants, self.__logger)
                         else:
                             self.__logger.critical("Plant manager can not fix moisture")
                     elif error == PSP.TEMPERATURE:
-                        self.__logger.debug("Plant manager fixing temperature...")
+                        self.__logger.debug("Plant manager fixing temperature on [" + sensor.ID + "]...")
                         if len(self.__onTemperatureError) > 0:
                             self.__onTemperatureError(self, plants, sensorData, error, errorPlants, self.__logger)
                         else:
@@ -409,12 +411,13 @@ class PlantManager:
     def ErrorFixByEmail(plantManager, plant, sensorData, error, errorPlants, logger):
         #type: (PlantManager, list[P.Plant], dict[str, object], str, dict[P.Plant, float], logging.Logger) -> None
         #TODO
-        pass
+        logger.critical("Could not send email: Not Implemented")
 
     def ErrorFixByWateringPlant(plantManager, plant, sensorData, error, errorPlants, logger):
         #type: (PlantManager, list[P.Plant], dict[str, object], str, dict[P.Plant, float], logging.Logger) -> None
         if error == PSP.MOISTURE:
             if plant.Pump != None:
+                #TODO if no water send email
                 #TODO merge all different pumps
                 #TODO find minimal maximum of water needed by all errorPlants
                 #TODO FAILSAFE: if last time watered > lastPollUpdate + updateInterval #error REALLY persists
