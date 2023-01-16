@@ -64,26 +64,11 @@ class PlantManager:
         for plant in plants:
             self.Add(plant)
         self.__logger.debug("Plant manager successfully initialized")
-    
-    @property
-    def PollInterval(self):
-        #type: () -> int
-        return self.__pollInterval    
-        
-    @PollInterval.setter
-    def PollInterval(self, value):
-        #type: (int) -> None
-        self.__pollInterval = value
-    
-    @property
-    def CriticalInterval(self):
-        #type: () -> int
-        return self.__criticalInterval
 
-    @CriticalInterval.setter
-    def CriticalInterval(self, value):
-        #type: (int) -> None
-        self.__criticalInterval = value
+    @property
+    def OnWaterError(self):
+        #type: () -> PE.PlantEvent
+        return self.__onWaterError
 
     @property
     def OnBatteryError(self):
@@ -196,7 +181,6 @@ class PlantManager:
             if not debugMode:
                 self.__cancellationToken = threading.Event()
                 self.__pollThread = threading.Thread(target=self.UpdatePoll)
-                #sleep first for fix
                 self.__actionThread = threading.Thread(target=self.UpdateAction)
 
                 self.__pollThread.start()
@@ -250,7 +234,7 @@ class PlantManager:
                 errorString = ""
 
                 for x in data:
-                    dataString += x + ": " + str(data[x]) + ", "
+                    dataString = x + ": " + str(data[x]) + ", "
                 for x in range(len(plants)):
                     plantString = plants[x].PlantConfiguration.Name + ", "
                     if data[PSP.BATTERY] <= self.__batterLowLevel:
@@ -299,11 +283,11 @@ class PlantManager:
             timeNeeded = self.__lastPollUpdate - t
             nextPollIn = self.__pollInterval - timeNeeded
             if nextPollIn <= 0:
-                self.__logger.info("Poll time for plant manager: "   + str(timeNeeded) + "s")
+                self.__logger.info("Poll time for plant manager: "   + str(timeNeeded / 60) + "min")
                 self.__logger.debug("Plant manager finished poll with " + str(abs(nextPollIn)) + "s delay")
             else:
-                self.__logger.info("Poll time for plant manager: " + str(timeNeeded) + "s, sleeping now for next poll in: " + str(nextPollIn) + "s")
-                self.__logger.debug("Poll thread resuming after " + str(WakeableSleep(self.__cancellationToken, nextPollIn, PlantManager.__maximumSleepingTime)) + "s")
+                self.__logger.info("Poll time for plant manager: " + str(timeNeeded / 60) + "min, sleeping now for next poll in: " + str(nextPollIn / 60) + "min")
+                WakeableSleep(self.__cancellationToken, nextPollIn, PlantManager.__maximumSleepingTime)
 
 
         if self.__cancellationToken.is_set():
@@ -312,8 +296,6 @@ class PlantManager:
             self.__logger.warning("Poll thread closed unexpectedly")
     
     def UpdateAction(self):
-        #sleep for first time
-        WakeableSleep(self.__cancellationToken,self.__criticalInterval)
         while not self.__cancellationToken.is_set():
             self.__logger.info("Plant manager starts new fixing round...")
             t = time.time()
@@ -392,11 +374,11 @@ class PlantManager:
             timeNeeded = self.__lastActionUpdate - t
             nextFixIn = self.__criticalInterval - timeNeeded
             if nextFixIn <= 0:
-                self.__logger.info("Plant manager finished fixing round in " + str(timeNeeded) + "s")
+                self.__logger.info("Plant manager finished fixing round in " + str(timeNeeded / 60) + "min")
                 self.__logger.debug("Plant manager finished fixing round with " + str(abs(nextFixIn)) + "s delay")
             else:
-                self.__logger.info("Plant manager finished fixing round in " + str(timeNeeded) + "s, sleeping now for next fixing round in: " + str(nextFixIn) + "s")
-                self.__logger.debug("Action thread resuming after " + str(WakeableSleep(self.__cancellationToken, nextFixIn, PlantManager.__maximumSleepingTime)) + "s")
+                self.__logger.info("Plant manager finished fixing round in " + str(timeNeeded / 60) + "min, sleeping now for next fixing round in: " + str(nextFixIn / 60) + "min")
+                WakeableSleep(self.__cancellationToken, nextFixIn, PlantManager.__maximumSleepingTime)
 
         if self.__cancellationToken.is_set():
             self.__logger.debug("Action thread finished")
