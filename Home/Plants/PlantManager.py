@@ -269,17 +269,20 @@ class PlantManager:
                         errorString += "Fertilizer: insufficient (" + str(data[PSP.CONDUCTIVITY]) + ")"
                         errorDict[PSP.CONDUCTIVITY] = t
                     
-                    #check if errors still persist (else delete)
                     with self.__errorsLock:
+                        #check if errors still persist (else delete)
                         for oldErrorKey in self.__errors[plants[x]]:
-                            entryValid = False
                             for newErrorKey in errorDict:
-                                if self.__errors[plants[x]][oldErrorKey] == None:
-                                    self.__errors[plants[x]][oldErrorKey] = errorDict[newErrorKey]
-                                entryValid = True
-                            if not entryValid:
+                                if newErrorKey == oldErrorKey:
+                                    #error persists
+                                    break
+                            else:
                                 self.__errors[plants[x]][oldErrorKey] = None
-            
+                        #add new errors
+                        for newErrorKey in errorDict:
+                            if not newErrorKey in self.__errors[plants[x]]:
+                                self.__errors[plants[x]][newErrorKey] = t
+
                 self.__logger.info("Plant manager successfully updated polling data for plants [" + str(sensor) + "]: " + plantString)
                 self.__logger.debug("Plant manager acquired new polling data for plants [" + str(sensor) + "]: " + dataString)
                 if len(errorDict) > 0:
@@ -330,6 +333,7 @@ class PlantManager:
                 with self.__sensorDataCacheLock:
                     sensorData = self.__sensorDataCache[sensor]
 
+                #filter for critical errors
                 #foreach plant from the same sensor
                 for plant in plants:
                     for error in currentErrors[plant]:
