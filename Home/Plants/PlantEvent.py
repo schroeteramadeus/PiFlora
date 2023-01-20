@@ -17,6 +17,7 @@ class PlantEvent(E.Event):
 
 class PlantEventData:
     def __init__(self, plantManager, plants, sensorData, error, errorPlants, logger) -> None:
+        #type: (PM.PlantManager, list[P.Plant], dict[str, object], str, dict[P.Plant, float], logging.Logger) -> None
         self.__plantManager = plantManager #type: PM.PlantManager
         self.__plants = plants #type: list[P.Plant]
         self.__sensorData = sensorData #type: dict[str, object]

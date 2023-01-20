@@ -40,7 +40,7 @@ try:
             lightSpan=VS.ValueSpan(100, 500))
         plantPump = PUMP.GPIOPump(GPIOManager.GetFilteredAvailableGPIOs(GPIOTypes.STANDARDINOUT)[0])
         plant = P.Plant(plantSensor=plantSensor,plantConfiguration=plantConfiguration,hardware={
-            P.Plant.PUMPHARDWAREID:plantPump,
+            P.Plant.HARDWARE_PUMP:plantPump,
         })
         plants.append(plant)
 

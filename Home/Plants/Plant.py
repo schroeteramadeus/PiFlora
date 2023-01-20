@@ -7,7 +7,7 @@ from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensorParameters as PSP
 
 class Plant:
 
-    PUMPHARDWAREID = "pump" #type: str
+    HARDWARE_PUMP = "pump" #type: str
 
     def __init__(self, plantConfiguration, plantSensor, hardware = {}) -> None:
         #type: (PC.PlantConfiguration, PS.PlantSensor, dict[str, Actor | Sensor]) -> None
@@ -39,12 +39,12 @@ class Plant:
     @property
     def Pump(self):
         #type: () -> P.Pump
-        return self.__hardware[Plant.PUMPHARDWAREID]
+        return self.__hardware[Plant.HARDWARE_PUMP]
 
     @Pump.setter
     def Pump(self, pump):
         #type: (P.Pump) -> None
-        self.__hardware[Plant.PUMPHARDWAREID] = pump
+        self.__hardware[Plant.HARDWARE_PUMP] = pump
 
     #TODO setter + getter for other standard hardware e.g. lamps?
 

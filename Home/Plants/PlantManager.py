@@ -170,7 +170,7 @@ class PlantManager:
             if not added:
                 newSensor = [plant]
                 self.__sensors[plant.PlantSensor] = newSensor
-                
+
                 self.__onWaterError[plant.PlantSensor] = PE.PlantEvent()
                 self.__onBatteryError[plant.PlantSensor] = PE.PlantEvent()
                 self.__onConductivityError[plant.PlantSensor] = PE.PlantEvent()
@@ -427,21 +427,47 @@ class PlantManager:
 
     def ErrorFixByWateringPlant(plantEventData):
         #type: (PE.PlantEventData) -> None
+        #TODO create errorPlantString for logging
         if plantEventData.Error == PSP.MOISTURE:
-            if plantEventData.Plant.Pump != None:
-                #TODO if no water send email?
-                #TODO merge all different pumps
-                #TODO find minimal maximum of water needed by all errorPlants
-                #TODO FAILSAFE: if last time watered > lastPollUpdate + updateInterval #error REALLY persists
-                if plantEventData.PlantManager.WaterSensor.PollSensor()[WS.WATER_SENSOR_UNDER_WATER]:
-                    waterNeeded = plantEventData.Plant.PlantConfiguration.MoistureSpan.Max - plantEventData.SensorData[PSP.MOISTURE]
-                    logger.debug("Watering " + plantEventData.Plant.PlantConfiguration.Name + " with " + str(waterNeeded) + "ml")
-                    waterGiven = plantEventData.Plant.Pump.Water(waterNeeded)
-                    logger.info("Successfully watered " + plantEventData.Plant.PlantConfiguration.Name + " with " + str(waterGiven) + "ml")
-                    logger.debug("Water difference of " + plantEventData.Plant.PlantConfiguration.Name + " is " + str(waterGiven - waterNeeded) + "ml")
+            #TODO merge all different pumps
+            pumpPlants = {} #type: dict[Pump, list[P.Plant]]
+            for plant in plantEventData.Plants:
+                if pumpPlants[plant.Pump] != None:
+                    pumpPlants[plant.Pump].append(plant)
                 else:
-                    logger.critical("Could not water " + plantEventData.Plant.PlantConfiguration.Name + ", because there is not enough water left")
-            else:
-                logger.critical("Could not water " + plantEventData.Plant.PlantConfiguration.Name + ", because there is no pump configured")
+                    pumpPlants[plant.Pump] = []
+                    pumpPlants[plant.Pump].append(plant)
+
+            #TODO if all error plants have a pump assigned in pumpPlants, else logger.critical("Could not water " + plantEventData.Plant.PlantConfiguration.Name + ", because there is no pump configured")
+            for pump in pumpPlants:
+
+                maximumWater = -1
+                minimumWater = -1
+                for plant in pumpPlants[pump]:
+                    if maximumWater == -1 or maximumWater > plant.PlantConfiguration.MoistureSpan.Max:
+                        maximumWater = plant.PlantConfiguration.MoistureSpan.Max
+
+                    if minimumWater == -1 or minimumWater < plant.PlantConfiguration.MoistureSpan.Min:
+                        minimumWater = plant.PlantConfiguration.MoistureSpan.Min
+
+                if maximumWater >= minimumWater:
+                    #TODO find minimal maximum of water needed by all errorPlants
+                    #TODO FAILSAFE: if last time watered > lastPollUpdate + updateInterval #error REALLY persists
+                    waterNeeded = maximumWater - plantEventData.SensorData[PSP.MOISTURE]
+                    if waterNeeded > 0:
+                        if plantEventData.PlantManager.WaterSensor.PollSensor()[WS.WATER_SENSOR_UNDER_WATER]:
+                            for plant in pumpPlants[pump]:
+                                logger.debug("Watering " + plant.PlantConfiguration.Name + " with " + str(waterNeeded) + "ml")
+                                waterGiven = pump.Water(waterNeeded)
+                                logger.info("Successfully watered " + plant.PlantConfiguration.Name + " with " + str(waterGiven) + "ml")
+                                logger.debug("Water difference of " + plant.PlantConfiguration.Name + " is " + str(waterGiven - waterNeeded) + "ml")
+                        else:
+                            #TODO if no water send email?
+                            logger.critical("Could not water with " + str(pump.ID) + ", because there is not enough water left")
+                    else:
+                        logger.warning("Could not water with " + str(pump.ID) + ", because other plants would be overwatered")
+                else:
+                    #TODO if no water send email?
+                    logger.critical("Could not water with " + str(pump.ID) + ", because the setup does not allow it (Minimum needed water: " + str(minimumWater) + " > Maximum needed water: " + str(maximumWater) + ")")
         else:
-            logger.warning("FAILSAFE: Not watering " + plantEventData.Plant.PlantConfiguration.Name + ", because error type was " + plantEventData.Error + " instead of " + PSP.MOISTURE)
+            logger.warning("FAILSAFE: Not watering, because error type was " + plantEventData.Error + " instead of " + PSP.MOISTURE)
