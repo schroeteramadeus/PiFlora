@@ -159,33 +159,35 @@ class PlantManager:
 
     def Add(self, plant):
         #type: (P.Plant) -> None
-        #TODO check if plant with same id exists then throw error
         self.__logger.debug("Adding plant " + plant.PlantConfiguration.Name + " to plant manager...")
-        added = False
-        with self.__sensorsLock:
-            for sensor in self.__sensors:
-                if sensor == plant.PlantSensor:
-                    self.__sensors[sensor].append(plant)
-                    added = True
-            if not added:
-                newSensor = [plant]
-                self.__sensors[plant.PlantSensor] = newSensor
+        if plant not in self.Plants:
+            added = False
 
-                self.__onWaterError[plant.PlantSensor] = PE.PlantEvent()
-                self.__onBatteryError[plant.PlantSensor] = PE.PlantEvent()
-                self.__onConductivityError[plant.PlantSensor] = PE.PlantEvent()
-                self.__onTemperatureError[plant.PlantSensor] = PE.PlantEvent()
-                self.__onLightError[plant.PlantSensor] = PE.PlantEvent()
+            with self.__sensorsLock:
+                for sensor in self.__sensors:
+                    if sensor == plant.PlantSensor:
+                        self.__sensors[sensor].append(plant)
+                        added = True
+                if not added:
+                    newSensor = [plant]
+                    self.__sensors[plant.PlantSensor] = newSensor
 
-        with self.__errorsLock:
-            self.__errors[plant] = {}
+                    self.__onWaterError[plant.PlantSensor] = PE.PlantEvent()
+                    self.__onBatteryError[plant.PlantSensor] = PE.PlantEvent()
+                    self.__onConductivityError[plant.PlantSensor] = PE.PlantEvent()
+                    self.__onTemperatureError[plant.PlantSensor] = PE.PlantEvent()
+                    self.__onLightError[plant.PlantSensor] = PE.PlantEvent()
 
-        self.__logger.info("Successfully added plant " + plant.PlantConfiguration.Name + " to plant manager")
+            with self.__errorsLock:
+                self.__errors[plant] = {}
+
+            self.__logger.info("Successfully added plant " + plant.PlantConfiguration.Name + " to plant manager")
+        else:
+            self.__logger.critical("Could not add " + plant.PlantConfiguration.Name + " to plant manager, because it already exists")
 
     def Remove(self, plant):
         #type: (P.Plant) -> None
         self.__logger.debug("Removing plant " + plant.PlantConfiguration.Name + " from plant manager")
-        #type: (P.Plant) -> None
         with self.__sensorsLock:
             for sensor in self.__sensors:
                 if sensor == plant.PlantSensor:
@@ -428,8 +430,9 @@ class PlantManager:
     def ErrorFixByWateringPlant(plantEventData):
         #type: (PE.PlantEventData) -> None
         #TODO create errorPlantString for logging
+        #TODO check if error is because underwatering else log info
         if plantEventData.Error == PSP.MOISTURE:
-            #TODO merge all different pumps
+            #merge all different pumps by plants
             pumpPlants = {} #type: dict[Pump, list[P.Plant]]
             for plant in plantEventData.Plants:
                 if pumpPlants[plant.Pump] != None:
@@ -441,6 +444,7 @@ class PlantManager:
             #TODO if all error plants have a pump assigned in pumpPlants, else logger.critical("Could not water " + plantEventData.Plant.PlantConfiguration.Name + ", because there is no pump configured")
             for pump in pumpPlants:
 
+                #get minimal maximum water and maximal minimum water for all plants
                 maximumWater = -1
                 minimumWater = -1
                 for plant in pumpPlants[pump]:
@@ -450,9 +454,7 @@ class PlantManager:
                     if minimumWater == -1 or minimumWater < plant.PlantConfiguration.MoistureSpan.Min:
                         minimumWater = plant.PlantConfiguration.MoistureSpan.Min
 
-                if maximumWater >= minimumWater:
-                    #TODO find minimal maximum of water needed by all errorPlants
-                    #TODO FAILSAFE: if last time watered > lastPollUpdate + updateInterval #error REALLY persists
+                if maximumWater >= minimumWater and maximumWater > 0:
                     waterNeeded = maximumWater - plantEventData.SensorData[PSP.MOISTURE]
                     if waterNeeded > 0:
                         if plantEventData.PlantManager.WaterSensor.PollSensor()[WS.WATER_SENSOR_UNDER_WATER]:
@@ -462,12 +464,10 @@ class PlantManager:
                                 logger.info("Successfully watered " + plant.PlantConfiguration.Name + " with " + str(waterGiven) + "ml")
                                 logger.debug("Water difference of " + plant.PlantConfiguration.Name + " is " + str(waterGiven - waterNeeded) + "ml")
                         else:
-                            #TODO if no water send email?
                             logger.critical("Could not water with " + str(pump.ID) + ", because there is not enough water left")
                     else:
-                        logger.warning("Could not water with " + str(pump.ID) + ", because other plants would be overwatered")
+                        logger.warning("Could not water with " + str(pump.ID) + ", because other plants could be overwatered")
                 else:
-                    #TODO if no water send email?
-                    logger.critical("Could not water with " + str(pump.ID) + ", because the setup does not allow it (Minimum needed water: " + str(minimumWater) + " > Maximum needed water: " + str(maximumWater) + ")")
+                    logger.critical("Could not water with " + str(pump.ID) + ", because the setup does not allow it (Minimum needed water: " + str(minimumWater) + ", Maximum needed water: " + str(maximumWater) + ")")
         else:
             logger.warning("FAILSAFE: Not watering, because error type was " + plantEventData.Error + " instead of " + PSP.MOISTURE)

@@ -2,6 +2,7 @@ import Home.Hardware.Actors.Water.Pump as P
 from Home.Hardware.GPIOManager import GPIOManager, GPIO, _GPIOHandle, GPIOTypes
 class GPIOPump(P.Pump):
 
+    #TODO Create SafetyPump class with FAILSAFE: if last_time_watered > threshold, maximumWaterInOneSession = 100ml
     def __init__(self, gpio) -> None:
         #type: (GPIO) -> None
         super().__init__()
@@ -25,5 +26,5 @@ class GPIOPump(P.Pump):
 
     def Water(self, ml):
         #type: (float) -> float
-        #TODO use gpio handle
+        #TODO use gpio handle for hardware interaction
         return ml
