@@ -2,7 +2,8 @@
 <html>
     <head>
         <title>Plant manager</title>
-        <script src="lib.js"></script>
+        <script src="/lib.js"></script>
+        <script src="ajax.js"></script>
         <link rel="stylesheet" href="reset.css">
         <link rel="stylesheet" href="style.css">
         <meta http-Equiv="Cache-Control" Content="no-cache" />
@@ -13,7 +14,6 @@
                 PLANTIDPARAM = 'plant';
                 PARAMS = getURIParameters();
                 CREATENEW = !PARAMS.has(PLANTIDPARAM);
-
 
                 //python types
                 PUMPTYPE = GPIOPUMPTYPE;
