@@ -1,4 +1,5 @@
 import json
+from typing import Callable
 from Home.Hardware.Actors.Water.Pump import Pump
 import Home.Plants.Plant as P
 from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensorParameters as PSP
@@ -35,23 +36,23 @@ class PlantManager:
         self.__criticalInterval = 900 #type: float #15 min #time that needs to pass in order for an error to be regarded as critical (action needed)
         self.__pollInterval = 300 #type: float #5min
         self.__sensorDataCacheLock = threading.Lock()
-        self.__sensorDataCache = {} #type: dict[str, dict[str, object]]
+        self.__sensorDataCache = {} #type: dict[PS.PlantSensor, dict[str, object]]
         self.__lastPollUpdate = -1 #type: float
         self.__lastActionUpdate = -1 #type: float
 
-        self.__onWaterError = PE.PlantEvent()
+        self.__onWaterError = {} #type: dict[PS.PlantSensor, PE.PlantEvent]
         #self.__onWaterError += PlantManager.ErrorFixByWateringPlant
 
-        self.__onBatteryError = PE.PlantEvent()
+        self.__onBatteryError = {} #type: dict[PS.PlantSensor, PE.PlantEvent]
         #self.__onBatteryError += PlantManager.ErrorFixByEmail
 
-        self.__onConductivityError = PE.PlantEvent()
+        self.__onConductivityError = {} #type: dict[PS.PlantSensor, PE.PlantEvent]
         #self.__onConductivityError += PlantManager.ErrorFixByEmail
 
-        self.__onTemperatureError = PE.PlantEvent()
+        self.__onTemperatureError = {} #type: dict[PS.PlantSensor, PE.PlantEvent]
         #self.__onTemperatureError += PlantManager.ErrorFixByEmail
 
-        self.__onLightError = PE.PlantEvent()
+        self.__onLightError = {} #type: dict[PS.PlantSensor, PE.PlantEvent]
         #self.__onLightError += PlantManager.ErrorFixByEmail
 
         self.__waterSensor = waterSensor #type: WS.WaterSensor
@@ -85,30 +86,25 @@ class PlantManager:
         #type: (int) -> None
         self.__criticalInterval = value
 
-    @property
-    def OnWaterError(self):
-        #type: () -> PE.PlantEvent
-        return self.__onWaterError
+    def GetOnWaterError(self, plantSensor):
+        #type: (PS.PlantSensor) -> None
+        return self.__onWaterError[plantSensor]
 
-    @property
-    def OnBatteryError(self):
-        #type: () -> PE.PlantEvent
-        return self.__onBatteryError
+    def GetOnBatteryError(self, plantSensor):
+        #type: (PS.PlantSensor) -> None
+        return self.__onBatteryError[plantSensor]
 
-    @property
-    def OnConductivityError(self):
-        #type: () -> PE.PlantEvent
-        return self.__onConductivityError
+    def GetOnConductivityError(self, plantSensor):
+        #type: (PS.PlantSensor) -> None
+        return self.__onConductivityError[plantSensor]
 
-    @property
-    def OnTemperatureError(self):
-        #type: () -> PE.PlantEvent
-        return self.__onTemperatureError
+    def GetOnTemperatureError(self, plantSensor):
+        #type: (PS.PlantSensor) -> None
+        return self.__onTemperatureError[plantSensor]
 
-    @property
-    def OnLightError(self):
-        #type: () -> PE.PlantEvent
-        return self.__onLightError
+    def GetOnLightError(self, plantSensor):
+        #type: (PS.PlantSensor) -> None
+        return self.__onLightError[plantSensor]
 
     @property
     def Logger(self):
@@ -156,7 +152,7 @@ class PlantManager:
         plants = self.Plants
 
         for plant in plants:
-            if not plant.Pump in pumps:
+            if plant.Pump != None and not plant.Pump in pumps:
                 pumps.append(plant.Pump)
 
         return pumps
@@ -174,6 +170,12 @@ class PlantManager:
             if not added:
                 newSensor = [plant]
                 self.__sensors[plant.PlantSensor] = newSensor
+                
+                self.__onWaterError[plant.PlantSensor] = PE.PlantEvent()
+                self.__onBatteryError[plant.PlantSensor] = PE.PlantEvent()
+                self.__onConductivityError[plant.PlantSensor] = PE.PlantEvent()
+                self.__onTemperatureError[plant.PlantSensor] = PE.PlantEvent()
+                self.__onLightError[plant.PlantSensor] = PE.PlantEvent()
 
         with self.__errorsLock:
             self.__errors[plant] = {}
@@ -181,6 +183,7 @@ class PlantManager:
         self.__logger.info("Successfully added plant " + plant.PlantConfiguration.Name + " to plant manager")
 
     def Remove(self, plant):
+        #type: (P.Plant) -> None
         self.__logger.debug("Removing plant " + plant.PlantConfiguration.Name + " from plant manager")
         #type: (P.Plant) -> None
         with self.__sensorsLock:
@@ -190,9 +193,18 @@ class PlantManager:
                         self.__sensors[sensor].remove(plant)
                     else:
                         self.__sensors.pop(sensor)
+
+                        self.__onWaterError.pop(plant.PlantSensor)
+                        self.__onBatteryError.pop(plant.PlantSensor)
+                        self.__onConductivityError.pop(plant.PlantSensor)
+                        self.__onTemperatureError.pop(plant.PlantSensor)
+                        self.__onLightError.pop(plant.PlantSensor)
                     break
         with self.__errorsLock:
             self.__errors[plant] = None
+
+        
+
         self.__logger.info("Successfully removed plant " + plant.PlantConfiguration.Name + " from plant manager")
 
     def Start(self):
@@ -356,32 +368,32 @@ class PlantManager:
                     errorPlants = errors[error]
                     if error == PSP.BATTERY:
                         self.__logger.debug("Plant manager fixing low battery on [" + sensor.ID + "]...")
-                        if len(self.__onBatteryError) > 0:
-                            self.__onBatteryError(self, plants, sensorData, error, errorPlants, self.__logger)
+                        if len(self.__onBatteryError[sensor]) > 0:
+                            self.__onBatteryError[sensor](PE.PlantEventData(self, plants, sensorData, error, errorPlants, self.__logger))
                         else:
                             self.__logger.critical("Plant manager can not fix battery")
                     elif error == PSP.CONDUCTIVITY:
                         self.__logger.debug("Plant manager fixing conductivity on [" + sensor.ID + "]...")
-                        if len(self.__onConductivityError) > 0:
-                            self.__onConductivityError(self, plants, sensorData, error, errorPlants, self.__logger)
+                        if len(self.__onConductivityError[sensor]) > 0:
+                            self.__onConductivityError[sensor](PE.PlantEventData(self, plants, sensorData, error, errorPlants, self.__logger))
                         else:
                             self.__logger.critical("Plant manager can not fix conductivity")
                     elif error == PSP.LIGHT:
                         self.__logger.debug("Plant manager fixing light on [" + sensor.ID + "]...")
-                        if len(self.__onLightError) > 0:
-                            self.__onLightError(self, plants, sensorData, error, errorPlants, self.__logger)
+                        if len(self.__onLightError[sensor]) > 0:
+                            self.__onLightError[sensor](PE.PlantEventData(self, plants, sensorData, error, errorPlants, self.__logger))
                         else:
                             self.__logger.critical("Plant manager can not fix light")
                     elif error == PSP.MOISTURE:
                         self.__logger.debug("Plant manager fixing moisture on [" + sensor.ID + "]...")
-                        if len(self.__onWaterError) > 0:
-                            self.__onWaterError(self, plants, sensorData, error, errorPlants, self.__logger)
+                        if len(self.__onWaterError[sensor]) > 0:
+                            self.__onWaterError[sensor](PE.PlantEventData(self, plants, sensorData, error, errorPlants, self.__logger))
                         else:
                             self.__logger.critical("Plant manager can not fix moisture")
                     elif error == PSP.TEMPERATURE:
                         self.__logger.debug("Plant manager fixing temperature on [" + sensor.ID + "]...")
-                        if len(self.__onTemperatureError) > 0:
-                            self.__onTemperatureError(self, plants, sensorData, error, errorPlants, self.__logger)
+                        if len(self.__onTemperatureError[sensor]) > 0:
+                            self.__onTemperatureError[sensor](PE.PlantEventData(self, plants, sensorData, error, errorPlants, self.__logger))
                         else:
                             self.__logger.critical("Plant manager can not fix temperature")
 
@@ -408,28 +420,28 @@ class PlantManager:
         else:
             self.__logger.warning("Action thread closed unexpectedly")
 
-    def ErrorFixByEmail(plantManager, plant, sensorData, error, errorPlants, logger):
-        #type: (PlantManager, list[P.Plant], dict[str, object], str, dict[P.Plant, float], logging.Logger) -> None
+    def ErrorFixByEmail(plantEventData):
+        #type: (PE.PlantEventData) -> None
         #TODO
         logger.critical("Could not send email: Not Implemented")
 
-    def ErrorFixByWateringPlant(plantManager, plant, sensorData, error, errorPlants, logger):
-        #type: (PlantManager, list[P.Plant], dict[str, object], str, dict[P.Plant, float], logging.Logger) -> None
-        if error == PSP.MOISTURE:
-            if plant.Pump != None:
-                #TODO if no water send email
+    def ErrorFixByWateringPlant(plantEventData):
+        #type: (PE.PlantEventData) -> None
+        if plantEventData.Error == PSP.MOISTURE:
+            if plantEventData.Plant.Pump != None:
+                #TODO if no water send email?
                 #TODO merge all different pumps
                 #TODO find minimal maximum of water needed by all errorPlants
                 #TODO FAILSAFE: if last time watered > lastPollUpdate + updateInterval #error REALLY persists
-                if plantManager.WaterSensor.PollSensor()[WS.WATER_SENSOR_UNDER_WATER]:
-                    waterNeeded = plant.PlantConfiguration.MoistureSpan.Max - sensorData[PSP.MOISTURE]
-                    logger.debug("Watering " + plant.PlantConfiguration.Name + " with " + str(waterNeeded) + "ml")
-                    waterGiven = plant.Pump.Water(waterNeeded)
-                    logger.info("Successfully watered " + plant.PlantConfiguration.Name + " with " + str(waterGiven) + "ml")
-                    logger.debug("Water difference of " + plant.PlantConfiguration.Name + " is " + str(waterGiven - waterNeeded) + "ml")
+                if plantEventData.PlantManager.WaterSensor.PollSensor()[WS.WATER_SENSOR_UNDER_WATER]:
+                    waterNeeded = plantEventData.Plant.PlantConfiguration.MoistureSpan.Max - plantEventData.SensorData[PSP.MOISTURE]
+                    logger.debug("Watering " + plantEventData.Plant.PlantConfiguration.Name + " with " + str(waterNeeded) + "ml")
+                    waterGiven = plantEventData.Plant.Pump.Water(waterNeeded)
+                    logger.info("Successfully watered " + plantEventData.Plant.PlantConfiguration.Name + " with " + str(waterGiven) + "ml")
+                    logger.debug("Water difference of " + plantEventData.Plant.PlantConfiguration.Name + " is " + str(waterGiven - waterNeeded) + "ml")
                 else:
-                    logger.critical("Could not water " + plant.PlantConfiguration.Name + ", because there is not enough water left")
+                    logger.critical("Could not water " + plantEventData.Plant.PlantConfiguration.Name + ", because there is not enough water left")
             else:
-                logger.critical("Could not water " + plant.PlantConfiguration.Name + ", because there is no pump configured")
+                logger.critical("Could not water " + plantEventData.Plant.PlantConfiguration.Name + ", because there is no pump configured")
         else:
-            logger.warning("FAILSAFE: Not watering " + plant.PlantConfiguration.Name + ", because error type was " + error + " instead of " + PSP.MOISTURE)
+            logger.warning("FAILSAFE: Not watering " + plantEventData.Plant.PlantConfiguration.Name + ", because error type was " + plantEventData.Error + " instead of " + PSP.MOISTURE)

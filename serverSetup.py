@@ -289,7 +289,9 @@ def __addPlant(file, request):
                     break
 
             if not alreadyExists:
-                PLANTMANAGER.Add(Plant(plantConfiguration, sensor, pump))
+                PLANTMANAGER.Add(Plant(plantConfiguration, sensor, {
+                    Plant.PUMPHARDWAREID: pump,
+                }))
             else:
                 output["error"] = {
                     "set": True,
@@ -644,4 +646,6 @@ def Load(filePath):
             else:
                 raise AttributeError("Could not deserialize pump of type: " + d["pump"]["type"])
 
-        PLANTMANAGER.Add(Plant(pc,currentSensor,currentPump))
+        PLANTMANAGER.Add(Plant(pc,currentSensor,{
+            Plant.PUMPHARDWAREID: currentPump,
+        }))
