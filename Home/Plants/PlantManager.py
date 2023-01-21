@@ -142,7 +142,7 @@ class PlantManager:
         #type: () -> list[PS.PlantSensor]
         sensors = []
         with self.__sensorsLock:
-            sensors = list(self.__sensors)
+            sensors = list(self.__sensors.keys())
         return sensors
         
     @property
@@ -195,7 +195,7 @@ class PlantManager:
                         self.__sensors[sensor].remove(plant)
                     else:
                         self.__sensors.pop(sensor)
-
+                            
                         self.__onWaterError.pop(plant.PlantSensor)
                         self.__onBatteryError.pop(plant.PlantSensor)
                         self.__onConductivityError.pop(plant.PlantSensor)
@@ -204,8 +204,6 @@ class PlantManager:
                     break
         with self.__errorsLock:
             self.__errors[plant] = None
-
-        
 
         self.__logger.info("Successfully removed plant " + plant.PlantConfiguration.Name + " from plant manager")
 

@@ -48,6 +48,11 @@ class Plant:
 
     #TODO setter + getter for other standard hardware e.g. lamps?
 
+    @property
+    def Harware(self):
+        #type: () -> dict[str, Actor | Sensor]
+        return self.__hardware
+
     @staticmethod
     def FromPlant(plant, plantSensor, hardware):
         #type: (Plant, PS.PlantSensor, dict[str, Actor | Sensor]) -> Plant

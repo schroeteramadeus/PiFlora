@@ -1,10 +1,7 @@
 # Python 3 server example
-from http.client import HTTPMessage
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-import socket
-from socketserver import BaseRequestHandler#,BaseHTTPRequestHandler
+import sys
 import time
-import ssl
 from urllib.parse import parse_qs, urlparse, ParseResult
 import os
 from Home.Webserver.VirtualFile import ServerRequest, VirtualFile, VirtualFileHandler, METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE
@@ -75,6 +72,7 @@ class ServerRequestHandler(SimpleHTTPRequestHandler):
                     response = file.Excecute(METHOD_GET, ServerRequest(self.headers, parse_qs(parsedURL.query), ""))
                     #print("Got Response", flush=True)
                 except Exception as e:
+                    print(sys.exc_info()[2])
                     print(e)
                     #TODO LOG
 
@@ -110,6 +108,7 @@ class ServerRequestHandler(SimpleHTTPRequestHandler):
                     response = file.Excecute(METHOD_POST, ServerRequest(self.headers, parse_qs(parsedURL.query), self.rfile.read(int(self.headers['Content-Length']))))
                     #print("Got Response", flush=True)
                 except Exception as e:
+                    print(sys.exc_info()[2])
                     print(e)
                     #TODO LOG
 

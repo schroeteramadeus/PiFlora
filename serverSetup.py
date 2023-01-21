@@ -1,5 +1,7 @@
 import json
 import re
+import sys
+import traceback
 from urllib.parse import ParseResult, parse_qs
 from Home.Hardware.Actors.Water.Pump import Pump
 from Home.Hardware.Actors.Water.GPIOPump import GPIOPump
@@ -212,7 +214,6 @@ def __addPlant(file, request):
     if not PLANTMANAGER.IsRunning:
         data = json.loads(request.Data)
         
-        plant = None #type: Plant
         plantConfiguration = None #type: PlantConfiguration
         sensor = None #type: PlantSensor
         pump = None #type: Pump
@@ -279,7 +280,6 @@ def __addPlant(file, request):
                 "set": True,
                 "message": "Bad formatting"
             }
-
         #create plant if not existant
         if not output["error"]["set"]:
             alreadyExists = False
@@ -297,9 +297,6 @@ def __addPlant(file, request):
                     "set": True,
                     "message": "Plant already exists"
                 }
-        else:
-            sensor = None
-            pump = None
     else:
         output["error"] = {
             "set": True,
@@ -325,11 +322,6 @@ def __changePlant(file, request):
                     plant = p
                     found = True
                     break
-            else:
-                output["error"] = {
-                    "set": True,
-                    "message": "Plant not known",
-                }
             if found:
                 plantConfiguration = None #type: PlantConfiguration
                 sensor = None #type: PlantSensor
@@ -426,9 +418,11 @@ def __changePlant(file, request):
                             plant.Pump = pump
 
                     plant.PlantConfiguration = plantConfiguration
-                else:
-                    sensor = None
-                    pump = None
+            else:
+                output["error"] = {
+                    "set": True,
+                    "message": "Plant not known",
+                }
         else:
             output["error"] = {
                 "set": True,
@@ -440,6 +434,33 @@ def __changePlant(file, request):
             "message": "Plantmanager is still running"
         }  
     return json.dumps(output)
+
+def __deletePlant(file, request):
+    #type: (VirtualFile, ServerRequest) -> str
+    output = {}
+    output["error"] = NOERRORRESPONSE
+    if not PLANTMANAGER.IsRunning:
+        data = json.loads(request.Data)
+
+        plant = None #type: Plant
+        if "plant" in request.GetParameters:
+            found = False
+            value = str(request.GetParameters["plant"][0])
+            for p in PLANTMANAGER.Plants:
+                if value == p.PlantConfiguration.Name:
+                    plant = p
+                    found = True
+                    break
+            if found:
+                PLANTMANAGER.Remove(plant)
+            else:
+                output["error"] = {
+                    "set": True,
+                    "message": "Plant not known",
+                }
+
+    return output
+
 
 def __getAllGPIOs(file, request):
     #type: (VirtualFile, ServerRequest) -> str

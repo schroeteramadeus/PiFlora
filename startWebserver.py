@@ -1,4 +1,7 @@
+import logging
 import os
+import sys
+from ConsoleFilter import ConsoleFilter
 from Home.Webserver.Server import HybridServer, ServerRequestHandler
 
 from serverSetup import Save, Load, HOSTNAME, ROOTFILE, SERVERPORT, SERVEABLEFILEEXTENSIONS, BLUETOOTHMANAGER, PLANTMANAGER, STANDARDPATH
@@ -47,4 +50,14 @@ def main():
 
 
 if __name__ == "__main__":   
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    handler.addFilter(ConsoleFilter())
+
+    root.addHandler(handler)
     main()

@@ -10,12 +10,15 @@ class GPIOPump(P.Pump):
         self.__gpio = gpio #type: GPIO
         self.__gpioHandle = None #type: _GPIOHandle
 
+        found = False
         for g in GPIOManager.GetAvailableGPIOs():
-            if g.Port == gpio.Port and  g.Type == GPIOTypes.STANDARDINOUT:
+            if g.Port == gpio.Port and gpio.Type == g.Type and g.Type == GPIOTypes.STANDARDINOUT:
                 self.__gpioHandle = GPIOManager.RequestGPIO(gpio)
+                found = True
                 break
-        else:
-            raise AttributeError("GPIO Pin " + gpio + " not available")
+
+        if not found:
+            raise AttributeError("GPIO Pin " + str(gpio.Port) + " not available or wrong type (got: " + str(g.Type) + ", needed: " + str(GPIOTypes.STANDARDINOUT) + ")")
 
     def __del__(self):
         GPIOManager.FreeGPIO(self.__gpioHandle)

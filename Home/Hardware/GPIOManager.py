@@ -25,6 +25,11 @@
 # # Benutzte GPIOs freigeben
 # GPIO.cleanup()
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 class _GPIOType:
     def __init__(self, name) -> None:
         #type: (str) -> None
@@ -122,12 +127,14 @@ class GPIOManager:
     def RequestGPIO(gpio):
         #type: (GPIO) -> _GPIOHandle
         if gpio in GPIOManager.GetAvailableGPIOs():
-            return _GPIOHandle(gpio)
+            logger.info("Binding GPIO " + str(gpio.Port))
+            handle = _GPIOHandle(gpio)
+            return handle
         else:
-            raise AttributeError("GPIO" + gpio.Port + " not valid")
+            raise AttributeError("GPIO" + str(gpio.Port) + " not valid")
 
     def FreeGPIO(gpioHandle):
         #type: (_GPIOHandle) -> None
         if gpioHandle.GPIO in GPIOManager.__GPIOs:
+            logger.info("Freeing GPIO " + str(gpioHandle.GPIO.Port))
             GPIOManager.__GPIOs[gpioHandle.GPIO] == False
-        gpioHandle = None

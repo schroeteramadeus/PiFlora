@@ -1,4 +1,8 @@
+import logging
+
 _importResolved = False
+
+logger = logging.getLogger(__name__)
 
 try:
     from miflora import miflora_poller # type: ignore
@@ -12,8 +16,8 @@ try:
     )
     _importResolved = True
 except ImportError or ModuleNotFoundError:
-    #TODO Log
     print("Could not import Module: MiFlora, Running " + __file__ + " now in Debugmode")
+    logger.warning("Could not import Module: MiFlora, Running " + __file__ + " now in Debugmode")
 
 import time
 import Home.Hardware.BluetoothManager as BM
@@ -35,12 +39,14 @@ class MiFloraPlantSensor(P.PlantSensor):
         self.__name = "" #type: str
 
         if not self._id in MiFloraPlantSensor.__usedSensors:
+            logger.info("Binding plant sensor " + self._id)
             self.__usedSensors.append(self._id)
             self.UpdateDebugMode(debugMode)
         else:
             raise ConnectionAbortedError("Not a valid sensor or already used")
     
     def __del__(self):
+        logger.info("Freeing plant sensor " + self._id)
         self.__usedSensors.remove(self._id)
 
     def UpdateDebugMode(self, debugMode):
