@@ -315,11 +315,11 @@ def __changePlant(file, request):
         data = json.loads(request.Data)
 
         plant = None #type: Plant
-        if "plant" in request.GetParameters:
+        if "filter" in request.GetParameters:
             found = False
-            value = str(request.GetParameters["plant"][0])
+            value = str(request.GetParameters["filter"][0])
             for p in PLANTMANAGER.Plants:
-                if value == p.PlantConfiguration.Name:
+                if re.match(value,p.PlantConfiguration.Name):
                     plant = p
                     found = True
                     break
@@ -337,7 +337,7 @@ def __changePlant(file, request):
                         lightSpan=ValueSpan(data["configuration"]["light"]["min"], data["configuration"]["light"]["max"]),
                         conductivitySpan=ValueSpan(data["configuration"]["conductivity"]["min"], data["configuration"]["conductivity"]["max"]),
                     )
-                    if plantConfiguration.Name != value:
+                    if plantConfiguration.Name != plant.PlantConfiguration.Name:
                         for p in PLANTMANAGER.Plants:
                             if p.PlantConfiguration.Name == plantConfiguration.Name:
                                 output["error"] = {
@@ -434,11 +434,12 @@ def __deletePlant(file, request):
         data = json.loads(request.Data)
 
         plant = None #type: Plant
-        if "plant" in request.GetParameters:
+        if "filter" in request.GetParameters:
             found = False
-            value = str(request.GetParameters["plant"][0])
+            value = str(request.GetParameters["filter"][0])
+
             for p in PLANTMANAGER.Plants:
-                if value == p.PlantConfiguration.Name:
+                if re.match(value,p.PlantConfiguration.Name):
                     plant = p
                     found = True
                     break
@@ -535,7 +536,8 @@ PLANTMANAGERADDPLANT.Bind(VirtualFileHandler(METHOD_POST, TYPE_JSONFILE,__addPla
 PLANTMANAGERCHANGEPLANT = PLANTMANAGERPLANTS.AddNewChildFile("change")
 PLANTMANAGERCHANGEPLANT.Bind(VirtualFileHandler(METHOD_POST, TYPE_JSONFILE,__changePlant))
 
-#TODO add delete
+PLANTMANAGERDELETEPLANT = PLANTMANAGERPLANTS.AddNewChildFile("delete")
+PLANTMANAGERDELETEPLANT.Bind(VirtualFileHandler(METHOD_POST, TYPE_JSONFILE,__deletePlant))
 
 ##################################Bluetooth##################################
 BLUETOOTHSERVICE = ROOTFILE.AddNewChildFile("bluetoothservice")

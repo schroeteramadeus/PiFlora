@@ -295,9 +295,9 @@ function changePlant(dataElement, plantName, readyFunc = (success)=>{}){
         }
     };
 
-    var plant = plantName;
+    var plant = "^" + plantName + "$";
 
-    xhttp.open("POST", HOST + PLANTMANAGERSERVICEPATH + "/plants/change?plant=" + plant, true);
+    xhttp.open("POST", HOST + PLANTMANAGERSERVICEPATH + "/plants/change?filter=" + plant, true);
     xhttp.setRequestHeader("Content-Type", "application/json");
     //console.log(JSON.stringify(data));
     xhttp.send(JSON.stringify(data));
@@ -318,9 +318,9 @@ function deletePlant(plantName, readyFunc = (success)=>{}){
         }
     };
 
-    var plant = plantName;
+    var plant = "^" + plantName + "$";
 
-    xhttp.open("POST", HOST + PLANTMANAGERSERVICEPATH + "/plants/delete?plant=" + plant, true);
+    xhttp.open("POST", HOST + PLANTMANAGERSERVICEPATH + "/plants/delete?filter=" + plant, true);
     xhttp.setRequestHeader("Content-Type", "application/json");
     //console.log(JSON.stringify(data));
     xhttp.send();

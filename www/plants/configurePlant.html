@@ -40,7 +40,7 @@
                         var status = document.getElementById('status');
                         var display = table.style.display;
 
-                        status.style.display = '';
+                        status.style.display = 'none';
                         table.style.display = 'none';
                         console.log('Loading plant: ' + PARAMS.get(PLANTIDPARAM));
 
@@ -80,6 +80,7 @@
                                 status.innerHTML = 'Success';
                                 table.style.display = display;
                             }
+                            status.style.display = ''
                             function fadeOut(){
                                 //TODO set class to not fade out
                                 status.style.display = 'none';
@@ -204,7 +205,6 @@
             //var table = document.getElementById('dataTable');
             var status = document.getElementById('status');
             //table.style.display = 'none';
-            status.style.display = 'block';
             
             function fadeOut(){
                 //TODO only excecute when the button is not pressed again
@@ -220,21 +220,25 @@
                         status.innerHTML = 'Failed';
                         status.dataset.pollStatus = 'inactive';
                     }
+                    status.style.display = 'block';
                     //TODO set class to fade out
                     excecuteOnceAfter(fadeOut, 1000);
                 });
 
             }else{
+                var newName = document.getElementById('name').value
                 changePlant(document.getElementById('dataTable'), PARAMS.get(PLANTIDPARAM), (success)=>{
                     if(success){
                         status.innerHTML = 'Success';
                         status.dataset.pollStatus = 'active';
+                        window.location = 'configurePlant.html?' + PLANTIDPARAM + '=' + newName;
                     }else{
                         status.innerHTML = 'Failed';
                         status.dataset.pollStatus = 'inactive';
-                    }
-                    //TODO set class to fade out
-                    excecuteOnceAfter(fadeOut, 1000);
+                        //TODO set class to fade out
+                        excecuteOnceAfter(fadeOut, 1000);         
+                    }         
+                    status.style.display = 'block';
                 });
             }
         "/>
