@@ -1,5 +1,6 @@
 # Python 3 server example
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+import logging
 import sys
 import time
 from urllib.parse import parse_qs, urlparse, ParseResult
@@ -10,14 +11,23 @@ import json
 #import Home.Hardware.Sensors.Water.AlwaysActiveWaterSensor as AAWS
 import Home.Hardware.BluetoothManager as BM
 
+logger = logging.Logger(__file__)
 
 class HybridServer(HTTPServer):
+    __id = 0
     def __init__(self, server_address, RequestHandlerClass, virtualRootFile, serviceableFileExtensions = [], standardpath = "/index.html", bind_and_activate: bool = ...) -> None:
         super().__init__(server_address, RequestHandlerClass, bind_and_activate)
+        self.__id = HybridServer.__id
+        HybridServer.__id += 1
         self.__rootFile = virtualRootFile
         self.__serviceableFileExtensions = serviceableFileExtensions
         self.__standardPath = standardpath
+        self.__logger = logger.getChild("HybridServer" + str(self.__id))
 
+    @property
+    def Logger(self):
+        #type: () -> logging.Logger
+        return self.__logger
     @property
     def RootFile(self):
         #type: () -> VirtualFile
@@ -148,4 +158,13 @@ class ServerRequestHandler(SimpleHTTPRequestHandler):
     
     #TODO
     def log_message(self, format, *args):
-        return
+        if isinstance(self.server,HybridServer):
+            server = self.server #type: HybridServer
+            server.__class__ = HybridServer
+            message = format.replace("%s", "{}").format(*args)
+            status = str(args[1])
+            
+            if status.startswith(("1", "2", "3", "4")):
+                server.Logger.debug(message)
+            else:
+                server.Logger.critical(message)
