@@ -1,10 +1,12 @@
 import json
 from typing import Callable
 from Home.Hardware.Actors.Water.Pump import Pump
+from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor
 import Home.Plants.Plant as P
 from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensorParameters as PSP
 import time
 import logging
+from Home.Plants.PlantConfiguration import PlantConfiguration
 import Home.Plants.PlantEvent as PE
 import Home.Hardware.Sensors.Water.WaterSensor as WS
 import threading
@@ -86,6 +88,7 @@ class PlantManager:
         #type: (int) -> None
         self.__criticalInterval = value
 
+    #TODO setter needed for "+= eventhandler"
     def GetOnWaterError(self, plantSensor):
         #type: (PS.PlantSensor) -> None
         return self.__onWaterError[plantSensor]
@@ -177,6 +180,8 @@ class PlantManager:
                     self.__onConductivityError[plant.PlantSensor] = PE.PlantEvent()
                     self.__onTemperatureError[plant.PlantSensor] = PE.PlantEvent()
                     self.__onLightError[plant.PlantSensor] = PE.PlantEvent()
+                
+                plant.AddOnPlantChangedEventHandler(self.__onPlantChanged)
 
             with self.__errorsLock:
                 self.__errors[plant] = {}
@@ -202,6 +207,8 @@ class PlantManager:
                         self.__onTemperatureError.pop(plant.PlantSensor)
                         self.__onLightError.pop(plant.PlantSensor)
                     break
+            plant.RemoveOnPlantChangedEventHandler(self.__onPlantChanged)
+
         with self.__errorsLock:
             self.__errors[plant] = None
 
@@ -469,3 +476,42 @@ class PlantManager:
                     logger.critical("Could not water with " + str(pump.ID) + ", because the setup does not allow it (Minimum needed water: " + str(minimumWater) + ", Maximum needed water: " + str(maximumWater) + ")")
         else:
             logger.warning("FAILSAFE: Not watering, because error type was " + plantEventData.Error + " instead of " + PSP.MOISTURE)
+
+    def __onPlantChanged(self, plant, oldValue, newValue, type):
+        #type: (P.Plant, object, object, str) -> None
+        if type == P.Plant.EVENTTYPE_PLANTSENSOR:
+            if oldValue != newValue:
+                with self.__sensorsLock:
+                    #delete old sensor
+                    if oldValue in self.__sensors:
+                        if len(self.__sensors[oldValue]) > 1:
+                            self.__sensors[oldValue].remove(plant)
+                        else:
+                            self.__sensors.pop(oldValue)
+                                
+                            self.__onWaterError.pop(oldValue)
+                            self.__onBatteryError.pop(oldValue)
+                            self.__onConductivityError.pop(oldValue)
+                            self.__onTemperatureError.pop(oldValue)
+                            self.__onLightError.pop(oldValue)
+
+                    #add new sensor
+                    if not newValue in self.__sensors:
+                        self.__sensors[newValue] = []
+
+                    self.__sensors[newValue].append(plant)
+
+                    self.__onWaterError[newValue] = PE.PlantEvent()
+                    self.__onBatteryError[newValue] = PE.PlantEvent()
+                    self.__onConductivityError[newValue] = PE.PlantEvent()
+                    self.__onTemperatureError[newValue] = PE.PlantEvent()
+                    self.__onLightError[newValue] = PE.PlantEvent()
+        
+        if type == P.Plant.EVENTTYPE_PLANTCONFIGURATION:
+            newValue.__class__ = PlantConfiguration            
+            oldValue.__class__ = PlantConfiguration
+
+            if oldValue.Name != newValue.Name:
+                for p in self.Plants:
+                    if newValue.Name == p.PlantConfiguration.Name and p != plant:
+                        raise ValueError("Plant with name " + str(newValue.Name) + " already exists")

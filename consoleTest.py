@@ -39,8 +39,9 @@ try:
             conductivitySpan=VS.ValueSpan(40, 70),
             lightSpan=VS.ValueSpan(100, 500))
         plantPump = PUMP.GPIOPump(GPIOManager.GetFilteredAvailableGPIOs(GPIOTypes.STANDARDINOUT)[0])
-        plant = P.Plant(plantSensor=plantSensor,plantConfiguration=plantConfiguration,hardware={
+        plant = P.Plant(plantConfiguration=plantConfiguration,hardware={
             P.Plant.HARDWARE_PUMP:plantPump,
+            P.Plant.HARDWARE_PLANTSENSOR:plantSensor,
         })
         plants.append(plant)
 

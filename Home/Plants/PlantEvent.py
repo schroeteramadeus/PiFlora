@@ -7,12 +7,14 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
     import logging
 
 class PlantEvent(E.Event):
+    def __init__(self):
+        super().__init__()
     #plants = all plants (on the same sensor), regardeless if having the error
     #errorList = dict with plants as keys that also have the same error, containing the time that the error was first detected
     #error = the actual error (code)
     def __call__(self, plantEventData):
         #type: (PlantEventData) -> None
-        for eventhandler in self.__eventhandlers:
+        for eventhandler in self._eventhandlers:
             eventhandler(plantEventData)
 
 class PlantEventData:
@@ -49,3 +51,14 @@ class PlantEventData:
     def Logger(self):
         #type: () -> logging.Logger
         return self.__logger
+    
+
+class PlantChangedEvent(E.Event):
+
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, plant, oldValue, newValue, valueType):
+        #type: (P.Plant, object, object, str) -> None
+        for eventhandler in self._eventhandlers:
+            eventhandler(plant, oldValue, newValue, valueType)

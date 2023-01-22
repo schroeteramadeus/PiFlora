@@ -163,8 +163,8 @@ def __plantmanagerPlants(file, request):
 
     if PLANTMANAGER != None:
         for plant in PLANTMANAGER.Plants:
-            if "plant" in request.GetParameters:
-                value = str(request.GetParameters["plant"][0])
+            if "filter" in request.GetParameters:
+                value = str(request.GetParameters["filter"][0])
                 if not re.match(value,plant.PlantConfiguration.Name):
                     continue
 
@@ -234,10 +234,10 @@ def __addPlant(file, request):
                     sensor = s
                     break
             else:        
-                if data["sensor"]["type"] == MiFloraPlantSensor.__name__:
+                if str(data["sensor"]["type"]) == MiFloraPlantSensor.__name__:
                     for sens in BluetoothManager.GetFilteredAvailableDevices("[Ff]lower[ ]*[Cc]are"):
-                        if data["sensor"]["id"] == sens["mac"]:
-                            sensor = MiFloraPlantSensor(data["sensor"]["id"])
+                        if str(data["sensor"]["id"]) == sens["mac"]:
+                            sensor = MiFloraPlantSensor(sens["mac"])
                             break
                     else:
                         output["error"] = {
@@ -255,11 +255,11 @@ def __addPlant(file, request):
             #get or create pump
             for p in PLANTMANAGER.Pumps:
                 #TODO optimize
-                if data["pump"]["id"] == p.ID and data["pump"]["type"] == p.__class__.__name__:
+                if str(data["pump"]["id"]) == p.ID and str(data["pump"]["type"]) == p.__class__.__name__:
                     pump = p
                     break
             else:
-                if data["pump"]["type"] == GPIOPump.__name__:
+                if str(data["pump"]["type"]) == GPIOPump.__name__:
                     for gpio in GPIOMANAGER.GetAvailableGPIOs():
                         if int(data["pump"]["id"]) == gpio.Port and gpio.Type == GPIOTypes.STANDARDINOUT:
                             pump = GPIOPump(gpio)
@@ -289,8 +289,9 @@ def __addPlant(file, request):
                     break
 
             if not alreadyExists:
-                PLANTMANAGER.Add(Plant(plantConfiguration, sensor, {
+                PLANTMANAGER.Add(Plant(plantConfiguration, {
                     Plant.HARDWARE_PUMP: pump,
+                    Plant.HARDWARE_PLANTSENSOR: sensor,
                 }))
             else:
                 output["error"] = {
@@ -327,62 +328,72 @@ def __changePlant(file, request):
                 sensor = None #type: PlantSensor
                 pump = None #type: Pump
 
-                #TODO check vars
+                #TODO check other vars
                 try:
                     plantConfiguration = PlantConfiguration(
-                        name=data["configuration"]["name"],
+                        name=str(data["configuration"]["name"]),
                         temperatureSpan=ValueSpan(data["configuration"]["temperature"]["min"], data["configuration"]["temperature"]["max"]),
                         moistureSpan=ValueSpan(data["configuration"]["moisture"]["min"], data["configuration"]["moisture"]["max"]),
                         lightSpan=ValueSpan(data["configuration"]["light"]["min"], data["configuration"]["light"]["max"]),
                         conductivitySpan=ValueSpan(data["configuration"]["conductivity"]["min"], data["configuration"]["conductivity"]["max"]),
                     )
-                    #get or create sensor
-                    for s in PLANTMANAGER.Sensors:
-                        #TODO optimize
-                        if data["sensor"]["id"] == s.ID and data["sensor"]["type"] == s.__class__.__name__:
-                            sensor = s
-                            break
-                    else:        
-                        if data["sensor"]["type"] == MiFloraPlantSensor.__name__:
-                            for sens in BluetoothManager.GetFilteredAvailableDevices("[Ff]lower[ ]*[Cc]are"):
-                                if data["sensor"]["id"] == sens["mac"]:
-                                    sensor = MiFloraPlantSensor(data["sensor"]["id"])
-                                    break
-                            else:
+                    if plantConfiguration.Name != value:
+                        for p in PLANTMANAGER.Plants:
+                            if p.PlantConfiguration.Name == plantConfiguration.Name:
                                 output["error"] = {
                                     "set": True,
-                                    "message": "Sensor not available"
+                                    "message": "Plant " + plantConfiguration.Name + " already exists"
                                 }
-                        #TODO add other sensorTypes?
-                        else:
-                            output["error"] = {
-                                "set": True,
-                                "message": "Sensortype not known"
-                            } 
 
-                    #get or create pump
-                    for p in PLANTMANAGER.Pumps:
-                        #TODO optimize
-                        if data["pump"]["id"] == p.ID and data["pump"]["type"] == p.__class__.__name__:
-                            pump = p
-                            break
-                    else:
-                        if data["pump"]["type"] == GPIOPump.__name__:
-                            for gpio in GPIOMANAGER.GetAvailableGPIOs():
-                                if int(data["pump"]["id"]) == gpio.Port and gpio.Type == GPIOTypes.STANDARDINOUT:
-                                    pump = GPIOPump(gpio)
-                                    break
+                    if not output["error"]["set"]:
+                        #get or create sensor
+                        for s in PLANTMANAGER.Sensors:
+                            #TODO optimize
+                            if data["sensor"]["id"] == s.ID and str(data["sensor"]["type"]) == s.__class__.__name__:
+                                sensor = s
+                                break
+                        else:        
+                            if str(data["sensor"]["type"]) == MiFloraPlantSensor.__name__:
+                                for sens in BluetoothManager.GetFilteredAvailableDevices("[Ff]lower[ ]*[Cc]are"):
+                                    if str(data["sensor"]["id"]) == sens["mac"]:
+                                        sensor = MiFloraPlantSensor(sens["mac"])
+                                        break
+                                else:
+                                    output["error"] = {
+                                        "set": True,
+                                        "message": "Sensor not available"
+                                    }
+                            #TODO add other sensorTypes?
                             else:
                                 output["error"] = {
                                     "set": True,
-                                    "message": "Pump not available"
-                                }
-                        #TODO add other pumpTypes
+                                    "message": "Sensortype not known"
+                                } 
+
+                    if not output["error"]["set"]:
+                        #get or create pump
+                        for p in PLANTMANAGER.Pumps:
+                            #TODO optimize
+                            if data["pump"]["id"] == p.ID and str(data["pump"]["type"]) == p.__class__.__name__:
+                                pump = p
+                                break
                         else:
-                            output["error"] = {
-                                "set": True,
-                                "message": "Pumptype not known"
-                            }
+                            if str(data["pump"]["type"]) == GPIOPump.__name__:
+                                for gpio in GPIOMANAGER.GetAvailableGPIOs():
+                                    if int(data["pump"]["id"]) == gpio.Port and gpio.Type == GPIOTypes.STANDARDINOUT:
+                                        pump = GPIOPump(gpio)
+                                        break
+                                else:
+                                    output["error"] = {
+                                        "set": True,
+                                        "message": "Pump not available"
+                                    }
+                            #TODO add other pumpTypes
+                            else:
+                                output["error"] = {
+                                    "set": True,
+                                    "message": "Pumptype not known"
+                                }
                 except Exception as e:
                     output["error"] = {
                         "set": True,
@@ -391,31 +402,11 @@ def __changePlant(file, request):
 
                 #change plant, delete unnecessary pumps and sensors
                 if not output["error"]["set"]:
-                    #delete sensor if not needed anymore
                     if not plant.PlantSensor.ID == sensor.ID:
-                        foundOtherPlant = False
-                        for p in PLANTMANAGER.Plants:
-                            if p.PlantSensor.ID == plant.PlantSensor.ID and p.PlantSensor.__class__ == plant.PlantSensor.__class__ and not p.PlantConfiguration.Name == plant.PlantConfiguration.Name:
-                                foundOtherPlant = True
-                                break
-                        if foundOtherPlant:
-                            plant.PlantSensor = sensor
-                        else:
-                            plant.PlantSensor = None
-                            plant.PlantSensor = sensor
+                        plant.PlantSensor = sensor
                     
-                    #delete pump if not needed anymore
                     if not plant.Pump.ID == pump.ID:
-                        foundOtherPlant = False
-                        for p in PLANTMANAGER.Plants:
-                            if p.Pump.ID == plant.Pump.ID and p.Pump.__class__ == plant.Pump.__class__ and not p.PlantConfiguration.Name == plant.PlantConfiguration.Name:
-                                foundOtherPlant = True
-                                break
-                        if foundOtherPlant:
-                            plant.Pump = pump
-                        else:
-                            plant.Pump = None
-                            plant.Pump = pump
+                        plant.Pump = pump
 
                     plant.PlantConfiguration = plantConfiguration
             else:
@@ -666,7 +657,7 @@ def Load(filePath):
             #TODO add other pumps
             else:
                 raise AttributeError("Could not deserialize pump of type: " + d["pump"]["type"])
-
-        PLANTMANAGER.Add(Plant(pc,currentSensor,{
+        PLANTMANAGER.Add(Plant(pc,{
             Plant.HARDWARE_PUMP: currentPump,
+            Plant.HARDWARE_PLANTSENSOR: currentSensor,
         }))
