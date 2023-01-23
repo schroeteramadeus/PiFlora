@@ -163,17 +163,11 @@ class PlantManager:
     def Add(self, plant):
         #type: (P.Plant) -> None
         self.__logger.debug("Adding plant " + plant.PlantConfiguration.Name + " to plant manager...")
-        if plant not in self.Plants:
-            added = False
-
+        plants = self.Plants
+        if plant not in plants:
             with self.__sensorsLock:
-                for sensor in self.__sensors:
-                    if sensor == plant.PlantSensor:
-                        self.__sensors[sensor].append(plant)
-                        added = True
-                if not added:
-                    newSensor = [plant]
-                    self.__sensors[plant.PlantSensor] = newSensor
+                if not plant.PlantSensor in self.__sensors:
+                    self.__sensors[plant.PlantSensor] = []
 
                     self.__onWaterError[plant.PlantSensor] = PE.PlantEvent()
                     self.__onBatteryError[plant.PlantSensor] = PE.PlantEvent()
@@ -181,6 +175,8 @@ class PlantManager:
                     self.__onTemperatureError[plant.PlantSensor] = PE.PlantEvent()
                     self.__onLightError[plant.PlantSensor] = PE.PlantEvent()
                 
+                self.__sensors[plant.PlantSensor].append(plant)
+
                 plant.AddOnPlantChangedEventHandler(self.__onPlantChanged)
 
             with self.__errorsLock:
@@ -194,23 +190,20 @@ class PlantManager:
         #type: (P.Plant) -> None
         self.__logger.debug("Removing plant " + plant.PlantConfiguration.Name + " from plant manager")
         with self.__sensorsLock:
-            for sensor in self.__sensors:
-                if sensor == plant.PlantSensor:
-                    if len(self.__sensors[sensor]) > 1:
-                        self.__sensors[sensor].remove(plant)
-                    else:
-                        self.__sensors.pop(sensor)
-                            
-                        self.__onWaterError.pop(plant.PlantSensor)
-                        self.__onBatteryError.pop(plant.PlantSensor)
-                        self.__onConductivityError.pop(plant.PlantSensor)
-                        self.__onTemperatureError.pop(plant.PlantSensor)
-                        self.__onLightError.pop(plant.PlantSensor)
-                    break
+            if plant.PlantSensor in self.__sensors:
+                self.__sensors[plant.PlantSensor].remove(plant)
+                if len(self.__sensors[plant.PlantSensor]) == 0:
+                    self.__sensors.pop(plant.PlantSensor)
+                        
+                    self.__onWaterError.pop(plant.PlantSensor)
+                    self.__onBatteryError.pop(plant.PlantSensor)
+                    self.__onConductivityError.pop(plant.PlantSensor)
+                    self.__onTemperatureError.pop(plant.PlantSensor)
+                    self.__onLightError.pop(plant.PlantSensor)
             plant.RemoveOnPlantChangedEventHandler(self.__onPlantChanged)
 
         with self.__errorsLock:
-            self.__errors[plant] = None
+            self.__errors.pop(plant)
 
         self.__logger.info("Successfully removed plant " + plant.PlantConfiguration.Name + " from plant manager")
 

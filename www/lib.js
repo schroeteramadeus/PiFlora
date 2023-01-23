@@ -1,15 +1,60 @@
 function changeView(iFrame, url){
     iFrame.src = url;
 }
+//data-poll-index = dataKey //unique identifier in order to find updated data
 function populate(body, row, data, prefix, newDisplay){
-    //TODO: check if rows are outdated (rather than killing everything)
     //delete last rows
-    body.innerHTML = ""
-    //create new rows
+    oldRows = body.children;
+    for(x = 0; x < oldRows.length; x++){
+        if (oldRows[x].dataset.pollIndex != null){
+            var newTableRow = row.cloneNode(true)
+            var index = -1
+            var dictPath = oldRows[x].dataset.pollIndex.split("_").splice(1);
+
+            for(y = 0; y < data.length; y++){
+                var newData = data[y];
+                
+                while(dictPath.length > 0){
+                    newData = newData[dictPath[0]];
+                    dictPath = dictPath.splice(1);
+                }
+                var oldIndexElement = oldRows[x].querySelector("[data-poll='" + oldRows[x].dataset.pollIndex + "']");
+                var oldDataPosition = oldIndexElement.dataset.pollPopulate;
+                var oldValue = null
+
+                if(oldDataPosition == null || oldDataPosition == "" || oldDataPosition == "data"){
+                    oldValue = oldIndexElement.dataset.pollData;
+                }else if(oldDataPosition == "innerHTML"){
+                    oldValue = oldIndexElement.innerHTML;
+                }else if(oldDataPosition = "value"){
+                    oldValue = oldIndexElement.value;
+                }else{
+                    console.error("could not find " + oldDataPosition + " of " + oldIndexElement.dataset.poll); 
+                }
+
+                if(newData == oldValue){
+                    oldRows[x].id = prefix + "_" + x;
+                    populateDataRow(oldRows[x], data[y], prefix);
+                    index = y;
+                    break;
+                }
+            }
+            if (index == -1){
+                data.splice(index, 1);
+            }
+            else{
+                //row not in data (outdated)
+                oldRows[x].remove();
+            }
+        }else{
+            //complete update needed
+            oldRows[x].remove();
+        }
+    }
+    //add new and not updatable rows
     for(x = 0; x < data.length; x++){
         var newTableRow = row.cloneNode(true)
         newTableRow.id = prefix + "_" + x
-
         populateDataRow(newTableRow, data[x], prefix);
         newTableRow.style.display = newDisplay
         body.appendChild(newTableRow)
@@ -41,19 +86,21 @@ function populateDataRow(tableRow, dataDictionary, prefix = ""){
                         console.log("populate: " + prefix + "_" + keys[x] + " with " + data);
                         element.innerHTML = data;
                     }*/
-                    if(element.dataset.pollPopulate == null || element.dataset.pollPopulate == "" || element.dataset.pollPopulate == "data"){
+                    var position = element.dataset.pollPopulate;
+                    if(position == null || position == "" || position == "data"){
                         element.dataset.pollData = data;
-                    }else if(element.dataset.pollPopulate == "innerHTML"){
+                    }else if(position == "innerHTML"){
                         element.innerHTML = data;
-                    }else if(element.dataset.pollPopulate = "value"){
+                    }else if(position = "value"){
                         element.value = data;
                     }else{
-                        console.error("could not populate " + element.dataset.pollPopulate + " of " + element.dataset.poll); 
+                        console.error("could not populate " + position + " of " + element.dataset.poll); 
                     }
                 }
             }
         }
     }
+
     //console.log(tableRow);
 }
 function getURIParameters(){

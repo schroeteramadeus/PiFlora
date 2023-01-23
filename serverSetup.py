@@ -431,8 +431,6 @@ def __deletePlant(file, request):
     output = {}
     output["error"] = NOERRORRESPONSE
     if not PLANTMANAGER.IsRunning:
-        data = json.loads(request.Data)
-
         plant = None #type: Plant
         if "filter" in request.GetParameters:
             found = False
@@ -450,8 +448,18 @@ def __deletePlant(file, request):
                     "set": True,
                     "message": "Plant not known",
                 }
-
-    return output
+        else:
+            output["error"] = {
+                "set": True,
+                "message": "Bad formatting"
+            }
+    else:
+        output["error"] = {
+            "set": True,
+            "message": "Plantmanager is still running"
+        } 
+        
+    return json.dumps(output)
 
 
 def __getAllGPIOs(file, request):
