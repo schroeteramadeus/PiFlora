@@ -31,15 +31,15 @@ function populate(body, row, data, prefix, newDisplay){
                 }else{
                     console.error("could not find " + oldDataPosition + " of " + oldIndexElement.dataset.poll); 
                 }
-
                 if(newData == oldValue){
                     oldRows[x].id = prefix + "_" + x;
                     populateDataRow(oldRows[x], data[y], prefix);
                     index = y;
                     break;
                 }
+
             }
-            if (index == -1){
+            if (index != -1){
                 data.splice(index, 1);
             }
             else{
