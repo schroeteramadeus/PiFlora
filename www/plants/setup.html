@@ -78,13 +78,9 @@
 
                             function reset(){
                                 switchDisplay(el, confirmEl);
-                                confirmEl.removeEventListener('onmouseleave', () =>{
-                                    reset();
-                                });
+                                confirmEl.removeEventListener('mouseout', reset);
                             }
-                            confirmEl.addEventListener('onmouseleave', () =>{
-                                reset();
-                            });
+                            confirmEl.addEventListener('mouseout', reset);
                             switchDisplay(el, confirmEl); 
                         "><i class="fa-solid fa-trash-can"></i></a>
 
