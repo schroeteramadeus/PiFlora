@@ -45,10 +45,12 @@ function populate(body, row, data, prefix, newDisplay){
             else{
                 //row not in data (outdated)
                 oldRows[x].remove();
+                x -= 1
             }
         }else{
             //complete update needed
             oldRows[x].remove();
+            x -= 1
         }
     }
     //add new and not updatable rows
