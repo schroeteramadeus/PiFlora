@@ -70,7 +70,7 @@ class Plant:
     #TODO setter + getter for other standard hardware e.g. lamps?
 
     @property
-    def Harware(self):
+    def Hardware(self):
         #type: () -> dict[str, Actor | Sensor]
         return self.__hardware
 

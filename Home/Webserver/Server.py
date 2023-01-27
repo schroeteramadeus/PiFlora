@@ -79,10 +79,9 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
                 self.send_header("Content-type", TYPE_HTMLFILE.ContentType)
                 self.end_headers()
                 
-                file = open(relativePath)
+                file = open(relativePath, 'rb')
 
-                for line in file:
-                    self.wfile.write(bytes(line, file.encoding))
+                self.copyfile(file, self.wfile)
 
                 #return SimpleHTTPRequestHandler.do_GET(self)
             else:

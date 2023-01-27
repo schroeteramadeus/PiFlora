@@ -2,8 +2,8 @@
 from typing import Any, List
 
 class Argument:
-    __name = str()
-    __argType = type
+    __name = None #type: str
+    __argType = None #type: type
 
     def __init__(self, name:str,argType:type):
         self.__name = name
@@ -17,7 +17,7 @@ class Argument:
         return self.__argType
 
 class Switch:
-    __name = str()
+    __name = None #type: str
 
     def __init__(self, name:str):
         self.__name = name
@@ -27,10 +27,10 @@ class Switch:
         return self.__name
 
 class ArgumentParser:
-    __arguments = [Argument]
-    __switches = [Switch]
+    __arguments = [] #type: list[Argument]
+    __switches = [] #type: list[Switch]
 
-    __parsed = dict()
+    __parsed = {} #type: dict[str, str | bool]
 
     def addSwitch(self, switch:Switch):
         self.__switches.append(switch)

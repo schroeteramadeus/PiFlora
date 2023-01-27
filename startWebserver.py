@@ -12,17 +12,17 @@ def main(runningDirPath, saveFilePath, sslKeyPath, sslCertPath):
 
     print("Loading data...")
     Load(saveFilePath)
-    print("Server starting on " + dir)
+    print("Server starting on " + runningDirPath)
     webServer = HybridServer((HOSTNAME, SERVERPORT), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=ROOTFILE, serviceableFileExtensions=SERVEABLEFILEEXTENSIONS, standardpath=STANDARDPATH, runningDirectory=runningDirPath)
 
-    print("Server starting on " + dir)
+    print("Activating TLS 1.3")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    #context.minimum_version = ssl.TLSVersion.TLSv1_3
+    context.load_cert_chain(sslKeyPath, sslCertPath)
 
-    webServer.socket = ssl.wrap_socket(webServer.socket, 
-        keyfile=sslKeyPath,#"config/ssl/key.pem", 
-        certfile=sslCertPath,#"config/ssl/cert.pem", 
-        server_side=True)
-
-    print("Server started http://%s:%s" % (HOSTNAME, SERVERPORT))
+    webServer.socket = context.wrap_socket(webServer.socket, server_side=True)
+    
+    print("Server started https://%s:%s" % (HOSTNAME, SERVERPORT))
 
     #TODO set up saving thread
     try:
@@ -42,10 +42,12 @@ def main(runningDirPath, saveFilePath, sslKeyPath, sslCertPath):
 
 if __name__ == "__main__":   
 
-    runningDirPath = "www"
-    saveFilePath = "config/save.conf"
-    sslKeyPath = "config/ssl/key.pem"
-    sslCertPath = "config/ssl/cert.pem"
+    wd = os.getcwd()
+
+    runningDirPath = wd + "/www"
+    saveFilePath = wd + "/config/save.conf"
+    sslKeyPath = wd + "/config/ssl/cert.key"
+    sslCertPath = wd + "/config/ssl/cert.csr"
 
     argParser = ArgumentParser()
     argParser.addArgument(Argument("www", str))
@@ -53,21 +55,21 @@ if __name__ == "__main__":
     argParser.addArgument(Argument("sslKey", str))
     argParser.addArgument(Argument("sslCert", str))
 
-    argParser.parseArguments(sys.argv)
+    argParser.parseArguments(sys.argv[1:])
 
-    www = str(argParser.getParsedValue("www")).rstrip("/")
-    save = str(argParser.getParsedValue("save")).rstrip("/")
-    sslKey = str(argParser.getParsedValue("sslKey")).rstrip("/")
-    sslCert = str(argParser.getParsedValue("sslCert")).rstrip("/")
+    www = argParser.getParsedValue("www")
+    save = argParser.getParsedValue("save")
+    sslKey = argParser.getParsedValue("sslKey")
+    sslCert = argParser.getParsedValue("sslCert")
 
-    if www != None and www != "":
-        runningDirPath = www
-    if save != None and save != "":
-        saveFilePath = save
-    if sslKey != None and sslKey != "":
-        sslKeyPath = sslKey
-    if sslCert != None and sslCert != "":
-        sslCertPath = sslCert
+    if www != None:
+        runningDirPath = str(www).rstrip("/")
+    if save != None:
+        saveFilePath = str(save).rstrip("/")
+    if sslKey != None:
+        sslKeyPath = str(sslKey).rstrip("/")
+    if sslCert != None:
+        sslCertPath = str(sslCert).rstrip("/")
 
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)

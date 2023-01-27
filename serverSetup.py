@@ -1,7 +1,5 @@
 import json
 import re
-import sys
-import traceback
 from urllib.parse import ParseResult, parse_qs
 from Home.Hardware.Actors.Water.Pump import Pump
 from Home.Hardware.Actors.Water.GPIOPump import GPIOPump
@@ -18,6 +16,7 @@ from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensor, PlantSensorPara
 from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import debugMode as MiFloraDebugMode, MiFloraPlantSensor as MiFloraPlantSensor
 from Home.Utils.ValueSpan import ValueSpan
 
+#TODO as singleton
 STANDARDPATH = "index.html"
 
 HOSTNAME = "localhost"
