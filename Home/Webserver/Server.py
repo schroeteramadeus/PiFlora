@@ -15,12 +15,13 @@ logger = logging.Logger(__file__)
 
 class HybridServer(HTTPServer):
     __id = 0
-    def __init__(self, server_address, RequestHandlerClass, virtualRootFile, serviceableFileExtensions = [], standardpath = "/index.html", bind_and_activate: bool = ...) -> None:
+    def __init__(self, server_address, RequestHandlerClass, virtualRootFile, runningDirectory = "", serviceableFileExtensions = [], standardpath = "/index.html", bind_and_activate: bool = ...) -> None:
         super().__init__(server_address, RequestHandlerClass, bind_and_activate)
         self.__id = HybridServer.__id
         HybridServer.__id += 1
         self.__rootFile = virtualRootFile
         self.__serviceableFileExtensions = serviceableFileExtensions
+        self.__runningDirectory = runningDirectory
         self.__standardPath = standardpath
         self.__logger = logger.getChild("HybridServer" + str(self.__id))
 
@@ -40,8 +41,12 @@ class HybridServer(HTTPServer):
     def StandardPath(self):
         #type: () -> str
         return self.__standardPath
+    @property
+    def RunningDirectory(self):
+        #type: () -> str
+        return self.__runningDirectory
 
-class ServerRequestHandler(SimpleHTTPRequestHandler):
+class HybridServerRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         #get get-parameters
         parsedURL = urlparse(self.path)
@@ -55,47 +60,58 @@ class ServerRequestHandler(SimpleHTTPRequestHandler):
 
         self.path = parsedURL.path
         server = None
-        if not isinstance(self.server,HybridServer):
-            self.path = relativePath
-            return SimpleHTTPRequestHandler.do_GET(self)
-        else:
+        if isinstance(self.server,HybridServer):
             server = self.server #type: HybridServer
             server.__class__ = HybridServer
             if relativePath == "":
-                relativePath = server.StandardPath
-
-        #print(relativePath)
-
-        if os.path.exists(relativePath) and os.path.isfile(relativePath) and relativePath.endswith(server.ServiceableFileExtensions):
-            #print("Serving file: " + os.getcwd() + "/" + relativePath)
-            self.path = relativePath
-            if getParams != None:
-                self.path += "?" + getParams
-            return SimpleHTTPRequestHandler.do_GET(self)
-        else:
-
-            file = server.RootFile.GetFileOrNone(self.path)
-            if file != None and file.HasMethodHandler(METHOD_GET):
-                response = None #type: str | None
-                #print("Got Virtual File: " + self.path, flush=True)
-                try:
-                    response = file.Excecute(METHOD_GET, ServerRequest(self.headers, parse_qs(parsedURL.query), ""))
-                    #print("Got Response", flush=True)
-                except Exception as e:
-                    print(sys.exc_info()[2])
-                    print(e)
-                    #TODO LOG
-
-                if response != None:
-                    self.send_response(200)
-                    self.send_header("Content-type", file.GetMethodHandler(METHOD_GET).Type.ContentType)
-                    self.end_headers()
-
-                    self.wfile.write(bytes(response, "utf-8"))
-                else:
-                    self.SendInternalError()
+                relativePath = server.RunningDirectory + "/" + server.StandardPath
             else:
-                self.SendFileNotFound()   
+                relativePath = server.RunningDirectory + "/" + relativePath
+
+            #print(relativePath)
+
+            if os.path.exists(relativePath) and os.path.isfile(relativePath) and relativePath.endswith(server.ServiceableFileExtensions):
+                #print("Serving file: " + os.getcwd() + "/" + relativePath)
+                self.path = relativePath
+                if getParams != None:
+                    self.path += "?" + getParams
+                self.send_response(200)
+                self.send_header("Content-type", TYPE_HTMLFILE.ContentType)
+                self.end_headers()
+                
+                file = open(relativePath)
+
+                for line in file:
+                    self.wfile.write(bytes(line, file.encoding))
+
+                #return SimpleHTTPRequestHandler.do_GET(self)
+            else:
+
+                file = server.RootFile.GetFileOrNone(self.path)
+                if file != None and file.HasMethodHandler(METHOD_GET):
+                    response = None #type: str | None
+                    #print("Got Virtual File: " + self.path, flush=True)
+                    try:
+                        response = file.Excecute(METHOD_GET, ServerRequest(self.headers, parse_qs(parsedURL.query), ""))
+                        #print("Got Response", flush=True)
+                    except Exception as e:
+                        print(sys.exc_info()[2])
+                        print(e)
+                        #TODO LOG
+
+                    if response != None:
+                        self.send_response(200)
+                        self.send_header("Content-type", file.GetMethodHandler(METHOD_GET).Type.ContentType)
+                        self.end_headers()
+
+                        self.wfile.write(bytes(response, "utf-8"))
+                    else:
+                        self.SendInternalError()
+                else:
+                    self.SendFileNotFound()
+        else:
+            self.SendInternalError()
+            #raise TypeError("HybridServerRequestHandler needs a HybridServer to be run on")
 
     def do_POST(self):
         #get get-parameters
@@ -133,7 +149,7 @@ class ServerRequestHandler(SimpleHTTPRequestHandler):
             else:
                 self.SendFileNotFound()
         else:
-            self.SendFileNotFound()
+            self.SendInternalError()
 
     def SendFileNotFound(self):
         self.send_response(404)

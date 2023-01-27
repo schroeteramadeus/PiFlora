@@ -1,12 +1,14 @@
 import logging
 import os
+import ssl
 import sys
 from ConsoleFilter import ConsoleFilter
-from Home.Webserver.Server import HybridServer, ServerRequestHandler
+from Home.Webserver.Server import HybridServer, HybridServerRequestHandler
 
+from Home.Utils.ArgumentParser import *
 from serverSetup import Save, Load, HOSTNAME, ROOTFILE, SERVERPORT, SERVEABLEFILEEXTENSIONS, BLUETOOTHMANAGER, PLANTMANAGER, STANDARDPATH
 
-def main():
+def main(runningDirPath, saveFilePath, sslKeyPath, sslCertPath):
     dir = input("Running directory (Press enter, to use the current working directory): ")
     if dir == "":
         dir = os.getcwd()
@@ -22,14 +24,15 @@ def main():
     print("Loading data...")
     Load(saveFile)
     print("Server starting on " + dir)
-    webServer = HybridServer((HOSTNAME, SERVERPORT), RequestHandlerClass=ServerRequestHandler,virtualRootFile=ROOTFILE, serviceableFileExtensions=SERVEABLEFILEEXTENSIONS, standardpath=STANDARDPATH)
+    webServer = HybridServer((HOSTNAME, SERVERPORT), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=ROOTFILE, serviceableFileExtensions=SERVEABLEFILEEXTENSIONS, standardpath=STANDARDPATH, runningDirectory=runningDirPath)
 
 
     #TODO activate SSL (HTTPS)
+    print("Server starting on " + dir)
 
-    #webServer.socket = ssl.wrap_socket (webServer.socket, 
-    #    keyfile="path/to/key.pem", 
-    #    certfile='path/to/cert.pem', server_side=True)
+    webServer.socket = ssl.wrap_socket(webServer.socket, 
+        keyfile="config/ssl/key.pem", 
+        certfile="config/ssl/cert.pem", server_side=True)
 
     print("Server started http://%s:%s" % (HOSTNAME, SERVERPORT))
 
@@ -50,6 +53,34 @@ def main():
 
 
 if __name__ == "__main__":   
+
+    runningDirPath = "www"
+    saveFilePath = "config/save.conf"
+    sslKeyPath = "config/ssl/key.pem"
+    sslCertPath = "config/ssl/cert.pem"
+
+    argParser = ArgumentParser()
+    argParser.addArgument(Argument("www", str))
+    argParser.addArgument(Argument("save", str))
+    argParser.addArgument(Argument("sslKey", str))
+    argParser.addArgument(Argument("sslCert", str))
+
+    argParser.parseArguments(sys.argv)
+
+    www = str(argParser.getParsedValue("www")).rstrip("/")
+    save = str(argParser.getParsedValue("save")).rstrip("/")
+    sslKey = str(argParser.getParsedValue("sslKey")).rstrip("/")
+    sslCert = str(argParser.getParsedValue("sslCert")).rstrip("/")
+
+    if www != None and www != "":
+        runningDirPath = www
+    if save != None and save != "":
+        saveFilePath = save
+    if sslKey != None and sslKey != "":
+        sslKeyPath = sslKey
+    if sslCert != None and sslCert != "":
+        sslCertPath = sslCert
+
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     
@@ -60,4 +91,4 @@ if __name__ == "__main__":
     handler.addFilter(ConsoleFilter())
 
     root.addHandler(handler)
-    main()
+    main(runningDirPath, saveFilePath, sslKeyPath, sslCertPath)
