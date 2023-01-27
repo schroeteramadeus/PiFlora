@@ -9,30 +9,18 @@ from Home.Utils.ArgumentParser import *
 from serverSetup import Save, Load, HOSTNAME, ROOTFILE, SERVERPORT, SERVEABLEFILEEXTENSIONS, BLUETOOTHMANAGER, PLANTMANAGER, STANDARDPATH
 
 def main(runningDirPath, saveFilePath, sslKeyPath, sslCertPath):
-    dir = input("Running directory (Press enter, to use the current working directory): ")
-    if dir == "":
-        dir = os.getcwd()
-    else:
-        os.chdir(dir)
-
-    saveFile = input("Saving file (Press enter, to use " + dir + "/save.conf): ")
-    if saveFile == "":
-        saveFile = os.getcwd() + "/save.conf"
-    elif not os.path.isfile(saveFile):
-        raise AttributeError(saveFile + " does not exist or is not a file.")
 
     print("Loading data...")
-    Load(saveFile)
+    Load(saveFilePath)
     print("Server starting on " + dir)
     webServer = HybridServer((HOSTNAME, SERVERPORT), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=ROOTFILE, serviceableFileExtensions=SERVEABLEFILEEXTENSIONS, standardpath=STANDARDPATH, runningDirectory=runningDirPath)
 
-
-    #TODO activate SSL (HTTPS)
     print("Server starting on " + dir)
 
     webServer.socket = ssl.wrap_socket(webServer.socket, 
-        keyfile="config/ssl/key.pem", 
-        certfile="config/ssl/cert.pem", server_side=True)
+        keyfile=sslKeyPath,#"config/ssl/key.pem", 
+        certfile=sslCertPath,#"config/ssl/cert.pem", 
+        server_side=True)
 
     print("Server started http://%s:%s" % (HOSTNAME, SERVERPORT))
 
@@ -47,7 +35,7 @@ def main(runningDirPath, saveFilePath, sslKeyPath, sslCertPath):
         if BLUETOOTHMANAGER != None and BLUETOOTHMANAGER.IsRunning():
             BLUETOOTHMANAGER.Stop()
         if not PLANTMANAGER.IsDebug:
-            Save(saveFile)
+            Save(saveFilePath)
         webServer.server_close()
         print("Server stopped.")
 

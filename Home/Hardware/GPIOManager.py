@@ -89,6 +89,7 @@ class _GPIOHandle:
 class GPIOManager:
 
     #TODO
+    #maybe use pinout()?
     __GPIOs = { #type: dict[GPIO, bool]
         GPIO(17, GPIOTypes.STANDARDINOUT) : False
     }
