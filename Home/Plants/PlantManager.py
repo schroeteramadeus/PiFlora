@@ -1,7 +1,4 @@
-import json
-from typing import Callable
 from Home.Hardware.Actors.Water.Pump import Pump
-from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor
 import Home.Plants.Plant as P
 from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensorParameters as PSP
 import time

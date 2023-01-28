@@ -1,6 +1,5 @@
 import json
 import re
-from urllib.parse import ParseResult, parse_qs
 from Home.Hardware.Actors.Water.Pump import Pump
 from Home.Hardware.Actors.Water.GPIOPump import GPIOPump
 from Home.Hardware.GPIOManager import GPIOManager, GPIOTypes
