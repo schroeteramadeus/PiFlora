@@ -4,25 +4,44 @@ import ssl
 import sys
 from ConsoleFilter import ConsoleFilter
 from Home.Webserver.Server import HybridServer, HybridServerRequestHandler
+from Home.Utils.ArgumentParser import Argument, ArgumentParser 
+import socket
+from serverSetup import Save, Load, HOSTADDRESS, ROOTFILE, SERVERPORT, SERVEABLEFILEEXTENSIONS, BLUETOOTHMANAGER, PLANTMANAGER, STANDARDPATH
 
-from Home.Utils.ArgumentParser import *
-from serverSetup import Save, Load, HOSTNAME, ROOTFILE, SERVERPORT, SERVEABLEFILEEXTENSIONS, BLUETOOTHMANAGER, PLANTMANAGER, STANDARDPATH
-
-def main(runningDirPath, saveFilePath, sslKeyPath, sslCertPath):
+def main(runningDirPath : str, saveFilePath : str, sslKeyPath : str, sslCertPath : str):
 
     print("Loading data...")
     Load(saveFilePath)
     print("Server starting on " + runningDirPath)
-    webServer = HybridServer((HOSTNAME, SERVERPORT), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=ROOTFILE, serviceableFileExtensions=SERVEABLEFILEEXTENSIONS, standardpath=STANDARDPATH, runningDirectory=runningDirPath)
+    webServer = HybridServer((HOSTADDRESS, SERVERPORT), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=ROOTFILE, serviceableFileExtensions=SERVEABLEFILEEXTENSIONS, standardpath=STANDARDPATH, runningDirectory=runningDirPath)
 
     print("Activating TLS 1.3")
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    #context.minimum_version = ssl.TLSVersion.TLSv1_3
-    context.load_cert_chain(sslKeyPath, sslCertPath)
+    try:
+        pass
+        #context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        #print(ssl.HAS_TLSv1_3)
+        #context.minimum_version = ssl.TLSVersion.TLSv1_3
+        #TODO password
+        #context.load_cert_chain(certfile=sslCertPath,keyfile=sslKeyPath)
 
-    webServer.socket = context.wrap_socket(webServer.socket, server_side=True)
-    
-    print("Server started https://%s:%s" % (HOSTNAME, SERVERPORT))
+        #webServer.socket = context.wrap_socket(webServer.socket, server_side=True)
+    except Exception as e:
+        print("Could not activate TLS")
+        i = input("Do you want to continue without TLS? (y/n):").lower()
+        while i != "y":
+            if i == "n":
+                raise e
+            i = input("Do you want to continue without TLS? (y/n):").lower()
+
+    hostname = socket.gethostbyaddr(HOSTADDRESS)
+    print("Server started on:")
+    print("\thttps://%s:%s" % (hostname[0], SERVERPORT))
+    for name in hostname[1]:
+        print("\thttps://%s:%s" % (name, SERVERPORT))
+    for ip in hostname[2]:
+        print("\thttps://%s:%s" % (ip, SERVERPORT))
+        if ip == "127.0.0.1":
+            print("\thttps://%s:%s" % ("localhost", SERVERPORT))
 
     #TODO set up saving thread
     try:

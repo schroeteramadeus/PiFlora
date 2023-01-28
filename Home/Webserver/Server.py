@@ -75,15 +75,17 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
                 self.path = relativePath
                 if getParams != None:
                     self.path += "?" + getParams
-                self.send_response(200)
-                self.send_header("Content-type", TYPE_HTMLFILE.ContentType)
-                self.end_headers()
+                #self.send_response(200)
+                #self.send_header("Content-type", TYPE_HTMLFILE.ContentType)
+                #self.end_headers()
                 
-                file = open(relativePath, 'rb')
+                # try:
+                #     file = open(relativePath, 'rb')
+                #     self.copyfile(file, self.wfile)
+                # finally:
+                #     file.close()
 
-                self.copyfile(file, self.wfile)
-
-                #return SimpleHTTPRequestHandler.do_GET(self)
+                return SimpleHTTPRequestHandler.do_GET(self)
             else:
 
                 file = server.RootFile.GetFileOrNone(self.path)

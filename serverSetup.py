@@ -19,7 +19,7 @@ from Home.Utils.ValueSpan import ValueSpan
 #TODO as singleton
 STANDARDPATH = "index.html"
 
-HOSTNAME = "localhost"
+HOSTADDRESS = "127.0.0.1"
 SERVERPORT = 8080
 TITLE = "Home"
 SERVEABLEFILEEXTENSIONS = (".html", ".htm", ".ico", ".png", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min")
