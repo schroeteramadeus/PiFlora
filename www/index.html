@@ -1,13 +1,35 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" href="/mainMenu.css">
+        <meta http-Equiv="Cache-Control" Content="no-cache" />
+        <meta http-Equiv="Pragma" Content="no-cache" />
+        <meta http-Equiv="Expires" Content="0" />
+        <link href="/fontawesome/css/fontawesome.css" rel="stylesheet">
+        <link href="/fontawesome/css/brands.css" rel="stylesheet">
+        <link href="/fontawesome/css/solid.css" rel="stylesheet">
+        <link href="/fontawesome/css/regular.css" rel="stylesheet">
         <title>Webserver</title>
     </head>
     <body>
-        <h1>Files:</h1>
+        <!--other stuff-->
         <ul>
-            <li><a href="root">Digital Repository (DEBUG)</a></li>
-            <li><a href="plants/dashboard.html">Plant Manager</a></li>
+            <li>
+                <a href="plants/dashboard.html"><i class="fa-solid fa-seedling"></i></a>
+                <div class="tooltip">Plant Manager</div>
+            </li>
+        </ul>
+        <hr />
+        <!--internal stuff-->
+        <ul>
+            <li>
+                <a href="root"><i class="fa-solid fa-bug-slash"></i></a>
+                <div class="tooltip">Digital Repository (DEBUG)</div>
+            </li>
+            <li>
+                <a href="settings/dashboard.html"><i class="fa-solid fa-gear"></i></a>
+                <div class="tooltip">Settings</div>
+            </li>
         </ul>
     </body>
 </html>

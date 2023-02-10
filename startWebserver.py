@@ -16,6 +16,7 @@ def main(runningDirPath : str, saveFilePath : str, sslKeyPath : str, sslCertPath
     webServer = HybridServer((HOSTADDRESS, SERVERPORT), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=ROOTFILE, serviceableFileExtensions=SERVEABLEFILEEXTENSIONS, standardpath=STANDARDPATH, runningDirectory=runningDirPath)
 
     print("Activating TLS 1.3")
+    protocol = "https://"
     try:
         pass
         #context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -32,16 +33,17 @@ def main(runningDirPath : str, saveFilePath : str, sslKeyPath : str, sslCertPath
             if i == "n":
                 raise e
             i = input("Do you want to continue without TLS? (y/n):").lower()
+        protocol = "http://"
 
     hostname = socket.gethostbyaddr(HOSTADDRESS)
     print("Server started on:")
-    print("\thttps://%s:%s" % (hostname[0], SERVERPORT))
+    print("\t%s%s:%s" % (protocol, hostname[0], SERVERPORT))
     for name in hostname[1]:
-        print("\thttps://%s:%s" % (name, SERVERPORT))
+        print("\t%s%s:%s" % (protocol, name, SERVERPORT))
     for ip in hostname[2]:
-        print("\thttps://%s:%s" % (ip, SERVERPORT))
+        print("\t%s%s:%s" % (protocol, ip, SERVERPORT))
         if ip == "127.0.0.1":
-            print("\thttps://%s:%s" % ("localhost", SERVERPORT))
+            print("\t%s%s:%s" % (protocol, "localhost", SERVERPORT))
 
     #TODO set up saving thread
     try:

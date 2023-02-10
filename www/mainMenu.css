@@ -1,0 +1,33 @@
+@import url("/style.css");
+
+:root{
+    --item-size: 100px;
+    --icon-size: calc(var(--item-size) * 0.5);
+}
+body{
+    padding-left: 5%;
+    padding-right: 5%;
+}
+ul{
+  display: flex;
+  position: relative;
+  margin-bottom: 5%;
+  margin-top: 5%;
+}
+ul li{
+    width: var(--item-size);
+    height: var(--item-size);
+    background-color: var(--color-pallette-darkest);
+    margin: 3px;
+    border-radius: 100%;
+}
+li a{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+li a i{
+    font-size: var(--icon-size);
+}

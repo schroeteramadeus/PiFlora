@@ -1,3 +1,5 @@
+@import url("/reset.css");
+
 :root{
     --poll-status-polling:"polling";
     --poll-status-active:"active";
@@ -39,6 +41,7 @@ body, html{
     color: var(--text-color-light);
     position: absolute;
     overflow: hidden !important;
+    background-color: var(--color-pallette-dark);
 }
 .menu{
     background-color: var(--color-pallette-darkest);
@@ -86,27 +89,31 @@ tr{
 thead{
     border-bottom: 2px solid var(--color-pallette-darkest);
 }
-/*
-th{
-    border-right: 1px solid var(--color-pallette-darkest);
-    border-bottom: 1px solid var(--color-pallette-darkest);
-}
-td{
-    border-bottom: 1px solid var(--color-pallette-darkest);
-    border-right: 1px solid var(--color-pallette-darkest);
-}
-tr:first-child th:last-child{
-    border-right: 0px;
-}
-tr:last-child{
-    border-bottom:0px;
-}*/
 tbody tr:nth-child(even){
     background-color: var(--color-pallette-dark);
 }
 tbody tr:nth-child(odd){
     background-color: var(--color-pallette-darker);
 }
+
+.tooltip {
+    visibility: hidden;
+    width: auto;
+    background-color: var(--color-pallette-darker);
+    color: var(--text-color-light);
+    text-align: center;
+    border-radius: 6px;
+    padding: 3px;
+    position: absolute;
+    z-index: 1;
+}
+*:hover > .tooltip{
+    visibility: visible;
+}
+.tooltip:hover {
+    visibility: visible;
+}
+
 a {
     color: var(--text-color-light);
 }
@@ -199,3 +206,4 @@ input[type="button"]:active{
 .maxHeight{
     height: 100%;
 }
+

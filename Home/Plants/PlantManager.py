@@ -107,11 +107,6 @@ class PlantManager:
         return self.__onLightError[plantSensor]
 
     @property
-    def Logger(self):
-        #type: () -> logging.Logger
-        return self.__logger
-
-    @property
     def WaterSensor(self):
         #type: () -> WS.WaterSensor
         return self.__waterSensor
@@ -420,7 +415,7 @@ class PlantManager:
     def ErrorFixByEmail(plantEventData):
         #type: (PE.PlantEventData) -> None
         #TODO
-        logger.critical("Could not send email: Not Implemented")
+        plantEventData.Logger.critical("Could not send email: Not Implemented")
 
     def ErrorFixByWateringPlant(plantEventData):
         #type: (PE.PlantEventData) -> None
@@ -454,22 +449,24 @@ class PlantManager:
                     if waterNeeded > 0:
                         if plantEventData.PlantManager.WaterSensor.PollSensor()[WS.WATER_SENSOR_UNDER_WATER]:
                             for plant in pumpPlants[pump]:
-                                logger.debug("Watering " + plant.PlantConfiguration.Name + " with " + str(waterNeeded) + "ml")
+                                plantEventData.Logger.debug("Watering " + plant.PlantConfiguration.Name + " with " + str(waterNeeded) + "ml")
                                 waterGiven = pump.Water(waterNeeded)
-                                logger.info("Successfully watered " + plant.PlantConfiguration.Name + " with " + str(waterGiven) + "ml")
-                                logger.debug("Water difference of " + plant.PlantConfiguration.Name + " is " + str(waterGiven - waterNeeded) + "ml")
+                                plantEventData.Logger.info("Successfully watered " + plant.PlantConfiguration.Name + " with " + str(waterGiven) + "ml")
+                                plantEventData.Logger.debug("Water difference of " + plant.PlantConfiguration.Name + " is " + str(waterGiven - waterNeeded) + "ml")
                         else:
-                            logger.critical("Could not water with " + str(pump.ID) + ", because there is not enough water left")
+                            plantEventData.Logger.critical("Could not water with " + str(pump.ID) + ", because there is not enough water left")
                     else:
-                        logger.warning("Could not water with " + str(pump.ID) + ", because other plants could be overwatered")
+                        plantEventData.Logger.warning("Could not water with " + str(pump.ID) + ", because other plants could be overwatered")
                 else:
-                    logger.critical("Could not water with " + str(pump.ID) + ", because the setup does not allow it (Minimum needed water: " + str(minimumWater) + ", Maximum needed water: " + str(maximumWater) + ")")
+                    plantEventData.Logger.critical("Could not water with " + str(pump.ID) + ", because the setup does not allow it (Minimum needed water: " + str(minimumWater) + ", Maximum needed water: " + str(maximumWater) + ")")
         else:
-            logger.warning("FAILSAFE: Not watering, because error type was " + plantEventData.Error + " instead of " + PSP.MOISTURE)
+            plantEventData.Logger.warning("FAILSAFE: Not watering, because error type was " + plantEventData.Error + " instead of " + PSP.MOISTURE)
 
     def __onPlantChanged(self, plant, oldValue, newValue, type):
         #type: (P.Plant, object, object, str) -> None
         if type == P.Plant.EVENTTYPE_PLANTSENSOR:
+            newValue.__class__ = PS.PlantSensor
+            oldValue.__class__ = PS.PlantSensor
             if oldValue != newValue:
                 with self.__sensorsLock:
                     #delete old sensor
@@ -496,8 +493,8 @@ class PlantManager:
                     self.__onConductivityError[newValue] = PE.PlantEvent()
                     self.__onTemperatureError[newValue] = PE.PlantEvent()
                     self.__onLightError[newValue] = PE.PlantEvent()
-        
-        if type == P.Plant.EVENTTYPE_PLANTCONFIGURATION:
+                    
+        elif type == P.Plant.EVENTTYPE_PLANTCONFIGURATION:
             newValue.__class__ = PlantConfiguration            
             oldValue.__class__ = PlantConfiguration
 

@@ -173,7 +173,6 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
         else:
             self.wfile.write(bytes("<!DOCTYPE><html><body><h1>500: INTERNAL SERVER ERROR</h1></body></html>", "utf-8"))
     
-    #TODO
     def log_message(self, format, *args):
         if isinstance(self.server,HybridServer):
             server = self.server #type: HybridServer
