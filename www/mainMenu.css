@@ -7,19 +7,24 @@
 body{
     padding-left: 5%;
     padding-right: 5%;
+    overflow: auto !important;
+}
+hr{
+    border: 5px solid var(--color-pallette-darker);
+    border-radius: 20px;
 }
 ul{
   display: flex;
   position: relative;
-  margin-bottom: 5%;
-  margin-top: 5%;
+  margin-bottom: 50px;
+  margin-top: 50px;
 }
 ul li{
     width: var(--item-size);
     height: var(--item-size);
     background-color: var(--color-pallette-darkest);
     margin: 3px;
-    border-radius: 100%;
+    border-radius: 20px;
 }
 li a{
     width: 100%;
@@ -30,4 +35,7 @@ li a{
 }
 li a i{
     font-size: var(--icon-size);
+}
+.tooltip{
+    width: var(--item-size);
 }

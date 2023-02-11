@@ -40,7 +40,7 @@ body, html{
     width: 100%;
     color: var(--text-color-light);
     position: absolute;
-    overflow: hidden !important;
+    overflow: auto !important;
     background-color: var(--color-pallette-dark);
 }
 .menu{
@@ -103,7 +103,7 @@ tbody tr:nth-child(odd){
     color: var(--text-color-light);
     text-align: center;
     border-radius: 6px;
-    padding: 3px;
+    padding: 5px;
     position: absolute;
     z-index: 1;
 }
@@ -114,7 +114,7 @@ tbody tr:nth-child(odd){
     visibility: visible;
 }
 
-a {
+a, i{
     color: var(--text-color-light);
 }
 a:hover{
@@ -123,7 +123,25 @@ a:hover{
 a:hover i{
     color: var(--text-color-medium);
 }
-
+a:active i{
+    color: var(--text-color-dark);
+}
+::-webkit-scrollbar {
+    width: 2vw;
+    height: 2vh;
+}
+::-webkit-scrollbar-track {
+    background-color: var(--color-pallette-darkest);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--color-pallette-medium);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-pallette-medium-dark);
+}
+::-webkit-scrollbar-button, ::-webkit-scrollbar-corner{
+    visibility: hidden;
+}
 *::placeholder, *:disabled{
     color: var(--text-color-dark);
 }
@@ -183,10 +201,12 @@ input[type="button"]:active{
     grid-row-start: second;
     grid-row-end: third;
     flex: 1 1 auto;
-    padding: 3px;
     /*top: var(--title-heigth);
     bottom: 0px;*/
+    background-color: var(--color-pallette-dark);
+
     width: 100%;
+    padding: 5px;
 }
 .top{
     position: absolute;
