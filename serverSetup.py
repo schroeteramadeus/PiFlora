@@ -21,7 +21,7 @@ STANDARDPATH = "index.html"
 HOSTADDRESS = "127.0.0.1"
 SERVERPORT = 8080
 TITLE = "Home"
-SERVEABLEFILEEXTENSIONS = (".html", ".htm", ".ico", ".png", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min")
+SERVEABLEFILEEXTENSIONS = (".html", ".htm", ".ico", ".png", ".svg", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min", ".json", ".map")
 
 if MiFloraDebugMode:
     PM.debugMode = True

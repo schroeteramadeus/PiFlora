@@ -18,6 +18,12 @@ WARNING: Debug mode will trigger on ALL other systems for bluetooth manager and 
 
 - make sure bluetooth is available (especially the command "sudo hcitool lescan")
 
+### Run the web server
+
+- python3 startWebserver.py
+
+- optionally for startWebserver.py you can also define  -www [HTML file path], -save [save file path], -sslCert [ssl certificate path], -sslKey [ssl private key path]
+
 ### Example hardware setup (simplest)
 
 - raspberry pi (3)

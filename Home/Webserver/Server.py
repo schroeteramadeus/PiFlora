@@ -69,23 +69,13 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
                 relativePath = server.RunningDirectory + "/" + relativePath
 
             #print(relativePath)
-
             if os.path.exists(relativePath) and os.path.isfile(relativePath) and relativePath.endswith(server.ServiceableFileExtensions):
                 #print("Serving file: " + os.getcwd() + "/" + relativePath)
                 self.path = relativePath
                 if getParams != None:
                     self.path += "?" + getParams
-                #self.send_response(200)
-                #self.send_header("Content-type", TYPE_HTMLFILE.ContentType)
-                #self.end_headers()
                 
-                # try:
-                #     file = open(relativePath, 'rb')
-                #     self.copyfile(file, self.wfile)
-                # finally:
-                #     file.close()
-
-                return SimpleHTTPRequestHandler.do_GET(self)
+                HybridServerRequestHandler.ServeStaticFile(self)
             else:
 
                 file = server.RootFile.GetFileOrNone(self.path)
@@ -158,7 +148,7 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.path = "Error404.html"
         if os.path.exists(self.path) and os.path.isfile(self.path):
-            return SimpleHTTPRequestHandler.do_GET(self)
+            self.copyfile(self.path, self.wfile)
         else:
             self.wfile.write(bytes("<!DOCTYPE><html><body><h1>404: FILE NOT FOUND</h1></body></html>", "utf-8"))
     
@@ -169,10 +159,28 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
         self.path = "Error500.html"
         
         if os.path.exists(self.path) and os.path.isfile(self.path):
-            return SimpleHTTPRequestHandler.do_GET(self)
+            self.copyfile(self.path, self.wfile)
         else:
             self.wfile.write(bytes("<!DOCTYPE><html><body><h1>500: INTERNAL SERVER ERROR</h1></body></html>", "utf-8"))
     
+    def ServeStaticFile(requestHandler):
+        #type: (HybridServerRequestHandler) -> None
+        fs = None
+        try:
+            file = open(requestHandler.path, 'rb')
+            fs = os.fstat(file.fileno())
+            requestHandler.send_response(200)
+            requestHandler.send_header("Content-type", requestHandler.guess_type(requestHandler.path))
+            requestHandler.send_header("Content-Length", str(fs[6]))
+            requestHandler.send_header("Last-Modified", requestHandler.date_time_string(fs.st_mtime))
+            requestHandler.end_headers()
+            requestHandler.copyfile(file, requestHandler.wfile)
+        except:
+            requestHandler.SendInternalError()
+        finally:
+            file.close()
+        
+
     def log_message(self, format, *args):
         if isinstance(self.server,HybridServer):
             server = self.server #type: HybridServer
