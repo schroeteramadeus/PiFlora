@@ -12,6 +12,7 @@
     --text-color-dark: rgb(100, 100, 100);
 
     --menu-width: 100px;
+    --status-icon-size: 20px;
     --title-heigth: 30px;
     --button-height: 30px;
     --button-width: 100px;
@@ -33,6 +34,8 @@
 
     --color-image-active-debug:linear-gradient(to right, var(--color-pallette-active) 40%, var(--color-pallette-debug) 60%);
     --color-image-inactive-debug:linear-gradient(to right, var(--color-pallette-inactive) 40%, var(--color-pallette-debug) 60%);
+
+    --standard-box-shadow:0 0px 5px rgba(0,0,0,.9);
 }
 
 body, html{
@@ -49,6 +52,7 @@ body, html{
     height: 100%;
     width: var(--menu-width);
     position: fixed;
+    z-index: 998;
 }
 .menu nav li{
     width: 100%;
@@ -77,43 +81,64 @@ li a{
     right: 0px;
     bottom: 0px;
     top:0px;
+    z-index: 1;
 }
-table{
-    border-collapse: collapse;
-    margin-top: 1px;
-    margin-bottom: 1px;
+.statusTable {
+    margin: 5px;
 }
-tr{
-    border-bottom: 1px solid var(--color-pallette-darkest);
+.statusTable td:has(> i) {
+    width: var(--status-icon-size);
+    height: var(--status-icon-size);
+    font-size: calc(var(--status-icon-size) * 0.9);
 }
-thead{
-    border-bottom: 2px solid var(--color-pallette-darkest);
+.statusTable td:has(> *[data-poll-status]) {
+    width: calc(var(--menu-width) - var(--status-icon-size));
+    height: var(--status-icon-size);
+    padding-left: 5px;
 }
-tbody tr:nth-child(even){
-    background-color: var(--color-pallette-dark);
+.statusTable td > * {
+    width: 100%;
+    height: var(--status-icon-size);
 }
-tbody tr:nth-child(odd){
-    background-color: var(--color-pallette-darker);
+.statusTable .tooltip {
+    transform: translate(0%, calc(-100% + var(--status-icon-size)));
 }
 
+.dataTable{
+    border-collapse: collapse;
+}
+.dataTable tr{
+    border-bottom: 1px solid var(--color-pallette-darkest);
+}
+.dataTable thead{
+    border-bottom: 2px solid var(--color-pallette-darkest);
+}
+.dataTable tbody tr:nth-child(even){
+    background-color: var(--color-pallette-dark);
+}
+.dataTable tbody tr:nth-child(odd){
+    background-color: var(--color-pallette-darker);
+}
 .tooltip {
     visibility: hidden;
     width: auto;
     background-color: var(--color-pallette-darker);
     color: var(--text-color-light);
+    box-shadow: var(--standard-box-shadow);
     text-align: center;
-    border-radius: 6px;
     padding: 5px;
     position: absolute;
-    z-index: 1;
+    z-index: 999;
 }
 *:hover > .tooltip{
     visibility: visible;
 }
-.tooltip:hover {
+.tooltip:hover{
     visibility: visible;
 }
-
+i {
+    text-align: center;
+}
 a, i{
     color: var(--text-color-light);
 }
@@ -127,7 +152,7 @@ a:active i{
     color: var(--text-color-dark);
 }
 ::-webkit-scrollbar {
-    width: 2vw;
+    width: 2vh;
     height: 2vh;
 }
 ::-webkit-scrollbar-track {
@@ -141,6 +166,8 @@ a:active i{
 }
 ::-webkit-scrollbar-button, ::-webkit-scrollbar-corner{
     visibility: hidden;
+    height: 0px;
+    width: 0px;
 }
 *::placeholder, *:disabled{
     color: var(--text-color-dark);
@@ -167,6 +194,12 @@ input[type="button"]:hover{
 }
 input[type="button"]:active{
     background-color: var(--color-pallette-medium);
+}
+*[data-poll-status] {
+    display: block;
+    text-align: center;
+    margin: auto;
+    max-width: var(--button-width);
 }
 *[data-poll-status="active"] {
     background-color: var(--color-pallette-active);
@@ -201,12 +234,8 @@ input[type="button"]:active{
     grid-row-start: second;
     grid-row-end: third;
     flex: 1 1 auto;
-    /*top: var(--title-heigth);
-    bottom: 0px;*/
     background-color: var(--color-pallette-dark);
-
     width: 100%;
-    padding: 5px;
 }
 .top{
     position: absolute;
@@ -226,4 +255,9 @@ input[type="button"]:active{
 .maxHeight{
     height: 100%;
 }
-
+.no-edge {
+    border-radius: 6px;
+}
+.edge-left-bottom {
+    border-radius: 6px 6px 6px 0px;
+}
