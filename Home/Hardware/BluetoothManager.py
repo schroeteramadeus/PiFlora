@@ -7,7 +7,7 @@ import sys
 import logging
 from sys import platform
 
-from Home.Utils.WakeableSleep import WakeableSleep
+from ..Utils.WakeableSleep import WakeableSleep
 #"Singleton"
 
 logger = logging.getLogger(__name__)

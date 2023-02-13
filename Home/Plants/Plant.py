@@ -1,11 +1,10 @@
 from typing import Callable
-from Home.Hardware.Actors.Actor import Actor
-from Home.Hardware.Sensors.Sensor import Sensor
-import Home.Plants.PlantConfiguration as PC
-import Home.Hardware.Sensors.Plant.PlantSensor as PS
-import Home.Hardware.Actors.Water.Pump as P
-from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensorParameters as PSP
-from Home.Plants.PlantEvent import PlantChangedEvent
+from ..Hardware.Actors.Actor import Actor
+from ..Hardware.Sensors.Sensor import Sensor
+from .PlantConfiguration import PlantConfiguration
+from ..Hardware.Sensors.Plant.PlantSensor import PlantSensor
+from ..Hardware.Actors.Water.Pump import Pump
+from .PlantEvent import PlantChangedEvent
 
 class Plant:
 
@@ -18,51 +17,51 @@ class Plant:
     EVENTTYPE_PLANTCONFIGURATION = "configuration"
 
     def __init__(self, plantConfiguration, hardware = {}) -> None:
-        #type: (PC.PlantConfiguration, dict[str, Actor | Sensor]) -> None
+        #type: (PlantConfiguration, dict[str, Actor | Sensor]) -> None
         self.__onPlantChanged = PlantChangedEvent() #type: PlantChangedEvent
-        self.__plantConfiguration = plantConfiguration #type: PC.PlantConfiguration
+        self.__plantConfiguration = plantConfiguration #type: PlantConfiguration
         self.__hardware = hardware #type: dict[str, Actor | Sensor]
 
     def AddOnPlantChangedEventHandler(self, handler):
-        #type: (Callable([P.Plant, object, object, str], None)) -> None
+        #type: (Callable([Plant, object, object, str], None)) -> None
         self.__onPlantChanged += handler
         
     def RemoveOnPlantChangedEventHandler(self, handler):
-        #type: (Callable([P.Plant, object, object, str], None)) -> None
+        #type: (Callable([Plant, object, object, str], None)) -> None
         self.__onPlantChanged -= handler
 
     @property
     def PlantSensor(self):
-        #type: () -> PS.PlantSensor
+        #type: () -> PlantSensor
         return self.__hardware[Plant.HARDWARE_PLANTSENSOR]
 
     @PlantSensor.setter
     def PlantSensor(self, plantSensor):
-        #type: (PS.PlantSensor) -> None
+        #type: (PlantSensor) -> None
         old = self.__hardware[Plant.HARDWARE_PLANTSENSOR]
         self.__hardware[Plant.HARDWARE_PLANTSENSOR] = plantSensor
         self.__onPlantChanged(self, old, plantSensor, Plant.EVENTTYPE_PLANTSENSOR)
 
     @property
     def PlantConfiguration(self):
-        #type: () -> PC.PlantConfiguration
+        #type: () -> PlantConfiguration
         return self.__plantConfiguration
     
     @PlantConfiguration.setter
     def PlantConfiguration(self, plantConfiguration):
-        #type: (PC.PlantConfiguration) -> None
+        #type: (PlantConfiguration) -> None
         old = self.__plantConfiguration
         self.__plantConfiguration = plantConfiguration
         self.__onPlantChanged(self, old, plantConfiguration, Plant.EVENTTYPE_PLANTCONFIGURATION)
 
     @property
     def Pump(self):
-        #type: () -> P.Pump
+        #type: () -> Pump
         return self.__hardware[Plant.HARDWARE_PUMP]
 
     @Pump.setter
     def Pump(self, pump):
-        #type: (P.Pump) -> None
+        #type: (Pump) -> None
         old = self.__hardware[Plant.HARDWARE_PUMP]
         self.__hardware[Plant.HARDWARE_PUMP] = pump
         self.__onPlantChanged(self, old, pump, Plant.EVENTTYPE_PUMP)

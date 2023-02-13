@@ -1,5 +1,7 @@
 import json
 import re
+import os
+from .InitialSetup import PLANTMANAGER, GPIOMANAGER, NOERRORRESPONSE, ROOTFILE, ListVirtualFiles, ONLOAD, ONSAVE
 from Home.Hardware.Actors.Water.Pump import Pump
 from Home.Hardware.Actors.Water.GPIOPump import GPIOPump
 from Home.Hardware.GPIOManager import GPIOManager, GPIOTypes
@@ -14,105 +16,6 @@ from Home.Plants.PlantConfiguration import PlantConfiguration
 from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensor, PlantSensorParameters as PSP
 from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import debugMode as MiFloraDebugMode, MiFloraPlantSensor as MiFloraPlantSensor
 from Home.Utils.ValueSpan import ValueSpan
-
-#TODO as singleton
-STANDARDPATH = "index.html"
-
-HOSTADDRESS = "127.0.0.1"
-SERVERPORT = 8080
-TITLE = "Home"
-SERVEABLEFILEEXTENSIONS = (".html", ".htm", ".ico", ".png", ".svg", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min", ".json", ".map")
-
-if MiFloraDebugMode:
-    PM.debugMode = True
-
-PLANTMANAGER = PlantManager(AlwaysActiveWaterSensor())
-
-BLUETOOTHMANAGER = BluetoothManager
-GPIOMANAGER = GPIOManager
-
-NOERRORRESPONSE = {
-    "set": False,
-    "message": None
-}
-def __listVirtualFiles(file, request):
-    #type: (VirtualFile, ServerRequest) -> str
-
-    html = "<!DOCTYPE html><html>"
-    head = ""
-    body = "<h1>Files in " + file.FullPath + "</h1><ul>"
-
-    for f in file.GetAllFiles():
-        interactiveString = ""
-        if f.HasMethodHandler(METHOD_GET):
-            handler = f.GetMethodHandler(METHOD_GET)
-            if handler.Type == TYPE_HTMLFILE:
-                interactiveString = "(HTML)"
-            elif handler.Type == TYPE_JSONFILE:
-                interactiveString = "(JSON)"
-            else:
-                interactiveString = "(other)"
-
-        body += "<li><a href='" + f.FullPath + "'>" + f.Name + interactiveString + "</a></li>"
-    
-    body += "</ul>"
-
-    html += "<head>" + head + "</head><body>" + body + "</body></html>"
-    return html
-    
-def __bluetoothServiceStatus(file, request):
-    #type: (VirtualFile, ServerRequest) -> str
-    data = {}
-    data["running"] = False
-    data["debug"] = False
-    data["error"] = NOERRORRESPONSE
-    if BLUETOOTHMANAGER != None:
-        data["running"] = BLUETOOTHMANAGER.IsRunning()
-        data["debug"] = BLUETOOTHMANAGER.IsDebug()
-    else:
-        data["error"] = {
-            "set": True,
-            "message": "Bluetoothmanager not defined"
-        }
-    return json.dumps(data)
-
-def __bluetoothServiceSwitch(file, request):
-    #type: (VirtualFile, ServerRequest) -> str
-    
-    if BLUETOOTHMANAGER != None:
-        if "running" in request.GetParameters:
-            value = str(request.GetParameters["running"][0])
-            if "true" == value:
-                BLUETOOTHMANAGER.Start()
-            elif "false" == value:
-                BLUETOOTHMANAGER.Stop()
-        if "debug" in request.GetParameters:
-            value = str(request.GetParameters["debug"][0])
-            if BLUETOOTHMANAGER.IsDebug() and not value:
-                BM.debugMode = value
-                if BLUETOOTHMANAGER.IsRunning():
-                    BLUETOOTHMANAGER.Stop()
-                    BLUETOOTHMANAGER.Start()
-
-    return __bluetoothServiceStatus(file, request)
-
-def __getBluetoothDevices(file, request):
-    #type: (VirtualFile, ServerRequest) -> str
-    data = {}
-    data["error"] = NOERRORRESPONSE
-    if BLUETOOTHMANAGER != None:
-        if "filter" in request.GetParameters:
-            value = str(request.GetParameters["filter"][0])
-            data["devices"] = BLUETOOTHMANAGER.GetFilteredAvailableDevices(value)
-        else:
-            data["devices"] = BLUETOOTHMANAGER.GetAvailableDevices()
-    else:
-        data["error"] = {
-            "set": True,
-            "message": "Bluetoothmanager not defined"
-        }
-
-    return json.dumps(data)
 
 def __plantmanagerStatus(file, request):
     #type: (VirtualFile, ServerRequest) -> str
@@ -459,73 +362,9 @@ def __deletePlant(file, request):
         
     return json.dumps(output)
 
-
-def __getAllGPIOs(file, request):
-    #type: (VirtualFile, ServerRequest) -> str
-    data = {}
-    data["gpios"] = []
-
-    gpios = []
-
-    data["error"] = NOERRORRESPONSE
-    if GPIOMANAGER != None:
-        if "filter" in request.GetParameters:
-            value = str(request.GetParameters["filter"][0])
-            for t in GPIOTypes.GetAll():
-                if value == t.Name:
-                    gpios = GPIOMANAGER.GetFilteredGPIOs(t)
-        else:
-            gpios = GPIOMANAGER.GetAllGPIOs()
-    else:
-        data["error"] = {
-            "set": True,
-            "message": "GPIOManager not defined"
-        }
-
-    for gpio in gpios:
-        data["gpios"].append({
-            "port": gpio.Port,
-            "type": gpio.Type.Name,
-        })
-
-    return json.dumps(data)
-
-def __getAvailableGPIOs(file, request):
-    #type: (VirtualFile, ServerRequest) -> str
-    data = {}
-    data["gpios"] = []
-
-    gpios = []
-
-    data["error"] = NOERRORRESPONSE
-    if GPIOMANAGER != None:
-        if "filter" in request.GetParameters:
-            value = str(request.GetParameters["filter"][0])
-            for t in GPIOTypes.GetAll():
-                if value == t.Name:
-                    gpios = GPIOMANAGER.GetFilteredAvailableGPIOs(t)
-        else:
-            gpios = GPIOMANAGER.GetAvailableGPIOs()
-    else:
-        data["error"] = {
-            "set": True,
-            "message": "GPIOManager not defined"
-        }
-
-    for gpio in gpios:
-        data["gpios"].append({
-            "port": gpio.Port,
-            "type": gpio.Type.Name,
-        })
-
-    return json.dumps(data)
-
-ROOTFILE = VirtualFile(None, "root")
-ROOTFILE.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,__listVirtualFiles))
-
 ##################################Plants##################################
 PLANTSERVICE = ROOTFILE.AddNewChildFile("plantmanagerservice")
-PLANTSERVICE.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,__listVirtualFiles))
+PLANTSERVICE.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,ListVirtualFiles))
 
 PLANTMANAGERSTATUS = PLANTSERVICE.AddNewChildFile("status")
 PLANTMANAGERSTATUS.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,__plantmanagerStatus))
@@ -545,34 +384,11 @@ PLANTMANAGERCHANGEPLANT.Bind(VirtualFileHandler(METHOD_POST, TYPE_JSONFILE,__cha
 PLANTMANAGERDELETEPLANT = PLANTMANAGERPLANTS.AddNewChildFile("delete")
 PLANTMANAGERDELETEPLANT.Bind(VirtualFileHandler(METHOD_POST, TYPE_JSONFILE,__deletePlant))
 
-##################################Bluetooth##################################
-BLUETOOTHSERVICE = ROOTFILE.AddNewChildFile("bluetoothservice")
-BLUETOOTHSERVICE.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,__listVirtualFiles))
+__plantsSaveFile = "plants.json"
 
-BLUETOOTHSERVICESTATUS = BLUETOOTHSERVICE.AddNewChildFile("status")
-BLUETOOTHSERVICESTATUS.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,__bluetoothServiceStatus))
-
-BLUETOOTHSERVICESWITCH = BLUETOOTHSERVICE.AddNewChildFile("switch")
-BLUETOOTHSERVICESWITCH.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,__bluetoothServiceSwitch))
-
-BLUETOOTHSERVICEDEVICES = BLUETOOTHSERVICE.AddNewChildFile("devices")
-BLUETOOTHSERVICEDEVICES.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,__getBluetoothDevices))
-
-##################################GPIO##################################
-GPIOSERVICE = ROOTFILE.AddNewChildFile("gpioservice")
-GPIOSERVICE.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,__listVirtualFiles))
-
-GPIOSERVICEGPIOS = GPIOSERVICE.AddNewChildFile("gpios")
-GPIOSERVICEGPIOS.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,__listVirtualFiles))
-
-GPIOSERVICEGPIOSAVAILABLE = GPIOSERVICEGPIOS.AddNewChildFile("available")
-GPIOSERVICEGPIOSAVAILABLE.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,__getAvailableGPIOs))
-
-GPIOSERVICEGPIOSAVAILABLE = GPIOSERVICEGPIOS.AddNewChildFile("all")
-GPIOSERVICEGPIOSAVAILABLE.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,__getAllGPIOs))
-
-
-def Save(filePath):
+#TODO valid JSON-formatting
+def Save(saveDirectory):
+    saveDirectory = saveDirectory.rstrip("/").rstrip("\\")
     #type: (str) -> None
     data = []
     plants = PLANTMANAGER.Plants
@@ -608,64 +424,70 @@ def Save(filePath):
         }
         data.append(json.dumps(content) + "\n")
 
-    file = open(filePath, 'w')
+    file = open(saveDirectory + "/" + __plantsSaveFile, 'w')
     file.writelines(data)
     file.close()
 
 
-def Load(filePath):
-    #type: (str) -> PlantManager
-    data = []
-    file = open(filePath, 'r')
-    lines = file.readlines()
-    
-    for line in lines:
-        data.append(json.loads(line))
-    file.close()
-
-    plants = [] #type: list[Plant]
-    sensors = [] #type: list[PlantSensor]
-    pumps = [] #type: list[Pump]
-
-    for d in data:
-        currentSensor = None
-        currentPump = None
-        pc = PlantConfiguration(
-            name = d["configuration"]["name"],
-            temperatureSpan = ValueSpan(int(d["configuration"]["temperature"]["min"]), int(d["configuration"]["temperature"]["max"])),
-            moistureSpan = ValueSpan(int(d["configuration"]["moisture"]["min"]), int(d["configuration"]["moisture"]["max"])),
-            lightSpan = ValueSpan(int(d["configuration"]["light"]["min"]), int(d["configuration"]["light"]["max"])),
-            conductivitySpan = ValueSpan(int(d["configuration"]["conductivity"]["min"]), int(d["configuration"]["conductivity"]["max"])),
-        )
-        for sensor in sensors:
-            if sensor.ID == d["sensor"]["id"]:
-                currentSensor = sensor
-                break
-        else:
-            if d["sensor"]["type"] == MiFloraPlantSensor.__name__:
-                currentSensor = MiFloraPlantSensor(d["sensor"]["id"])
-                sensors.append(currentSensor)
-            else:
-                raise AttributeError("Could not deserialize sensor of type: " + d["sensor"]["type"])
+def Load(saveDirectory):
+    #type: (str) -> None
+    saveDirectory = saveDirectory.rstrip("/").rstrip("\\")
+    file = saveDirectory + "/" + __plantsSaveFile
+    if os.path.exists(file) and os.path.isfile(file):
+        data = []
+        file = open(saveDirectory + "/" + __plantsSaveFile, 'r')
+        lines = file.readlines()
         
-        for pump in pumps:
-            if pump.ID == d["pump"]["id"]:
-                currentPump = pump
-                break
-        else:
-            if d["pump"]["type"] == GPIOPump.__name__:
-                gpios = GPIOMANAGER.GetFilteredAvailableGPIOs(GPIOTypes.STANDARDINOUT)
-                for gpio in gpios:
-                    if gpio.Port == int(d["pump"]["id"]):
-                        currentPump = GPIOPump(gpio)
-                        break
-                else:
-                    raise ValueError("Could not add GPIOPump, gpio" + gpio.Port + " is not available")
-                pumps.append(currentPump)
-            #TODO add other pumps
+        for line in lines:
+            data.append(json.loads(line))
+        file.close()
+
+        plants = [] #type: list[Plant]
+        sensors = [] #type: list[PlantSensor]
+        pumps = [] #type: list[Pump]
+
+        for d in data:
+            currentSensor = None
+            currentPump = None
+            pc = PlantConfiguration(
+                name = d["configuration"]["name"],
+                temperatureSpan = ValueSpan(int(d["configuration"]["temperature"]["min"]), int(d["configuration"]["temperature"]["max"])),
+                moistureSpan = ValueSpan(int(d["configuration"]["moisture"]["min"]), int(d["configuration"]["moisture"]["max"])),
+                lightSpan = ValueSpan(int(d["configuration"]["light"]["min"]), int(d["configuration"]["light"]["max"])),
+                conductivitySpan = ValueSpan(int(d["configuration"]["conductivity"]["min"]), int(d["configuration"]["conductivity"]["max"])),
+            )
+            for sensor in sensors:
+                if sensor.ID == d["sensor"]["id"]:
+                    currentSensor = sensor
+                    break
             else:
-                raise AttributeError("Could not deserialize pump of type: " + d["pump"]["type"])
-        PLANTMANAGER.Add(Plant(pc,{
-            Plant.HARDWARE_PUMP: currentPump,
-            Plant.HARDWARE_PLANTSENSOR: currentSensor,
-        }))
+                if d["sensor"]["type"] == MiFloraPlantSensor.__name__:
+                    currentSensor = MiFloraPlantSensor(d["sensor"]["id"])
+                    sensors.append(currentSensor)
+                else:
+                    raise AttributeError("Could not deserialize sensor of type: " + d["sensor"]["type"])
+            
+            for pump in pumps:
+                if pump.ID == d["pump"]["id"]:
+                    currentPump = pump
+                    break
+            else:
+                if d["pump"]["type"] == GPIOPump.__name__:
+                    gpios = GPIOMANAGER.GetFilteredAvailableGPIOs(GPIOTypes.STANDARDINOUT)
+                    for gpio in gpios:
+                        if gpio.Port == int(d["pump"]["id"]):
+                            currentPump = GPIOPump(gpio)
+                            break
+                    else:
+                        raise ValueError("Could not add GPIOPump, gpio" + gpio.Port + " is not available")
+                    pumps.append(currentPump)
+                #TODO add other pumps
+                else:
+                    raise AttributeError("Could not deserialize pump of type: " + d["pump"]["type"])
+            PLANTMANAGER.Add(Plant(pc,{
+                Plant.HARDWARE_PUMP: currentPump,
+                Plant.HARDWARE_PLANTSENSOR: currentSensor,
+            }))
+
+ONLOAD += Load
+ONSAVE += Save

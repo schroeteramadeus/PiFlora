@@ -195,8 +195,10 @@ input[type="button"]:hover{
 input[type="button"]:active{
     background-color: var(--color-pallette-medium);
 }
-*[data-poll-status] {
+span[data-poll-status] {
     display: block;
+}
+*[data-poll-status] {
     text-align: center;
     margin: auto;
     max-width: var(--button-width);

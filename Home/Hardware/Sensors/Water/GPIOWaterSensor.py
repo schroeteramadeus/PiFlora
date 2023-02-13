@@ -1,6 +1,6 @@
-import Home.Hardware.Sensors.Water.WaterSensor as WS
+from .WaterSensor import WaterSensor, WATER_SENSOR_UNDER_WATER
 
-class GPIOWaterSensor(WS.WaterSensor):
+class GPIOWaterSensor(WaterSensor):
     #TODO
     def PollSensor(self):
         #type: () -> dict[str, object]

@@ -2,11 +2,9 @@
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import logging
 import sys
-import time
 from urllib.parse import parse_qs, urlparse, ParseResult
 import os
-from Home.Webserver.VirtualFile import ServerRequest, VirtualFile, VirtualFileHandler, METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE
-import json
+from .VirtualFile import ServerRequest, VirtualFile, VirtualFileHandler, METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE
 #import Home.Plants.PlantManager as PM
 #import Home.Hardware.Sensors.Water.AlwaysActiveWaterSensor as AAWS
 import Home.Hardware.BluetoothManager as BM
@@ -53,7 +51,7 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
 
         uri = self.path.lstrip("/").split("?")
 
-        relativePath = uri[0]
+        relativePath = uri[0].replace("../", "")
         getParams = None
         if len(uri) > 1:
             getParams = uri[1]
@@ -72,8 +70,6 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
             if os.path.exists(relativePath) and os.path.isfile(relativePath) and relativePath.endswith(server.ServiceableFileExtensions):
                 #print("Serving file: " + os.getcwd() + "/" + relativePath)
                 self.path = relativePath
-                if getParams != None:
-                    self.path += "?" + getParams
                 
                 HybridServerRequestHandler.ServeStaticFile(self)
             else:
@@ -165,20 +161,23 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
     
     def ServeStaticFile(requestHandler):
         #type: (HybridServerRequestHandler) -> None
-        fs = None
         try:
             file = open(requestHandler.path, 'rb')
-            fs = os.fstat(file.fileno())
-            requestHandler.send_response(200)
-            requestHandler.send_header("Content-type", requestHandler.guess_type(requestHandler.path))
-            requestHandler.send_header("Content-Length", str(fs[6]))
-            requestHandler.send_header("Last-Modified", requestHandler.date_time_string(fs.st_mtime))
-            requestHandler.end_headers()
-            requestHandler.copyfile(file, requestHandler.wfile)
+            try:
+                fs = os.fstat(file.fileno())
+                requestHandler.send_response(200)
+                requestHandler.send_header("Content-type", requestHandler.guess_type(requestHandler.path))
+                requestHandler.send_header("Content-Length", str(fs[6]))
+                requestHandler.send_header("Last-Modified", requestHandler.date_time_string(fs.st_mtime))
+                requestHandler.end_headers()
+                requestHandler.copyfile(file, requestHandler.wfile)
+            except:
+                requestHandler.SendInternalError()
+            finally:
+                file.close()
         except:
             requestHandler.SendInternalError()
-        finally:
-            file.close()
+       
         
 
     def log_message(self, format, *args):

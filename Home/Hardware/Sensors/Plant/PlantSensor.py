@@ -1,7 +1,7 @@
-import Home.Hardware.Sensors.Sensor as S
+from ..Sensor import Sensor
 from abc import abstractmethod
 
-class PlantSensor(S.Sensor):
+class PlantSensor(Sensor):
 
     @abstractmethod
     def __init__(self) -> None:

@@ -20,13 +20,13 @@ except ImportError or ModuleNotFoundError:
     logger.warning("Could not import Module: MiFlora, Running " + __file__ + " now in Debugmode")
 
 import time
-import Home.Hardware.BluetoothManager as BM
-import Home.Hardware.Sensors.Plant.PlantSensor as P
+from ...BluetoothManager import BluetoothManager
+from .PlantSensor import PlantSensor, PlantSensorParameters
 
 debugMode = not _importResolved
 
 #TODO add debug mode
-class MiFloraPlantSensor(P.PlantSensor):
+class MiFloraPlantSensor(PlantSensor):
     
     __usedSensors = [] #type: list[str]
 
@@ -84,34 +84,34 @@ class MiFloraPlantSensor(P.PlantSensor):
         currentTime = time.time()
         if not self.IsDebug:
             output = {
-                P.PlantSensorParameters.BATTERY: self.__poller.parameter_value(MI_BATTERY),
-                P.PlantSensorParameters.TEMPERATURE: 0.0,
-                P.PlantSensorParameters.MOISTURE: 0.0,
-                P.PlantSensorParameters.LIGHT: 0.0,
-                P.PlantSensorParameters.CONDUCTIVITY: 0.0,
+                PlantSensorParameters.BATTERY: self.__poller.parameter_value(MI_BATTERY),
+                PlantSensorParameters.TEMPERATURE: 0.0,
+                PlantSensorParameters.MOISTURE: 0.0,
+                PlantSensorParameters.LIGHT: 0.0,
+                PlantSensorParameters.CONDUCTIVITY: 0.0,
             }
             for x in range(pollCount):
                 data = {
-                    P.PlantSensorParameters.TEMPERATURE: float(self.__poller.parameter_value(MI_TEMPERATURE) / pollCount),
-                    P.PlantSensorParameters.MOISTURE: float(self.__poller.parameter_value(MI_MOISTURE) / pollCount),
-                    P.PlantSensorParameters.LIGHT: float(self.__poller.parameter_value(MI_LIGHT) / pollCount),
-                    P.PlantSensorParameters.CONDUCTIVITY: float(self.__poller.parameter_value(MI_CONDUCTIVITY) / pollCount),
+                    PlantSensorParameters.TEMPERATURE: float(self.__poller.parameter_value(MI_TEMPERATURE) / pollCount),
+                    PlantSensorParameters.MOISTURE: float(self.__poller.parameter_value(MI_MOISTURE) / pollCount),
+                    PlantSensorParameters.LIGHT: float(self.__poller.parameter_value(MI_LIGHT) / pollCount),
+                    PlantSensorParameters.CONDUCTIVITY: float(self.__poller.parameter_value(MI_CONDUCTIVITY) / pollCount),
                 }
-                output[P.PlantSensorParameters.TEMPERATURE] += data[P.PlantSensorParameters.TEMPERATURE]
-                output[P.PlantSensorParameters.MOISTURE] += data[P.PlantSensorParameters.MOISTURE]
-                output[P.PlantSensorParameters.LIGHT] += data[P.PlantSensorParameters.LIGHT]
-                output[P.PlantSensorParameters.CONDUCTIVITY] += data[P.PlantSensorParameters.CONDUCTIVITY]
+                output[PlantSensorParameters.TEMPERATURE] += data[PlantSensorParameters.TEMPERATURE]
+                output[PlantSensorParameters.MOISTURE] += data[PlantSensorParameters.MOISTURE]
+                output[PlantSensorParameters.LIGHT] += data[PlantSensorParameters.LIGHT]
+                output[PlantSensorParameters.CONDUCTIVITY] += data[PlantSensorParameters.CONDUCTIVITY]
                 self.__poller.clear_cache()
                 self.__poller.clear_history()
                 if x < pollCount - 1:
                     time.sleep(10)
         else:
             output = {
-                P.PlantSensorParameters.BATTERY: 100,
-                P.PlantSensorParameters.TEMPERATURE: 22,
-                P.PlantSensorParameters.MOISTURE: 50,
-                P.PlantSensorParameters.LIGHT: 50,
-                P.PlantSensorParameters.CONDUCTIVITY: 50,
+                PlantSensorParameters.BATTERY: 100,
+                PlantSensorParameters.TEMPERATURE: 22,
+                PlantSensorParameters.MOISTURE: 50,
+                PlantSensorParameters.LIGHT: 50,
+                PlantSensorParameters.CONDUCTIVITY: 50,
             }
         timeNeeded =  time.time() - currentTime
         return output

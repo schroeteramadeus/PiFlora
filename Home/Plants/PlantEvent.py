@@ -1,12 +1,12 @@
-import Home.Utils.Event as E
+from ..Utils.Event import Event
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # Only imports the below statements during type checking
-    import Home.Plants.PlantManager as PM
-    import Home.Plants.Plant as P
+    from ..Plants.PlantManager import PlantManager
+    from ..Plants.Plant import Plant
     import logging
 
-class PlantEvent(E.Event):
+class PlantEvent(Event):
     def __init__(self):
         super().__init__()
     #plants = all plants (on the same sensor), regardeless if having the error
@@ -19,21 +19,21 @@ class PlantEvent(E.Event):
 
 class PlantEventData:
     def __init__(self, plantManager, plants, sensorData, error, errorPlants, logger) -> None:
-        #type: (PM.PlantManager, list[P.Plant], dict[str, object], str, dict[P.Plant, float], logging.Logger) -> None
-        self.__plantManager = plantManager #type: PM.PlantManager
-        self.__plants = plants #type: list[P.Plant]
+        #type: (PlantManager, list[Plant], dict[str, object], str, dict[Plant, float], logging.Logger) -> None
+        self.__plantManager = plantManager #type: PlantManager
+        self.__plants = plants #type: list[Plant]
         self.__sensorData = sensorData #type: dict[str, object]
         self.__error = error #type: str
-        self.__errorPlants = errorPlants #type: dict[P.Plant, float]
+        self.__errorPlants = errorPlants #type: dict[Plant, float]
         self.__logger = logger #type: logging.Logger
 
     @property
     def PlantManager(self):
-        #type: () -> PM.PlantManager
+        #type: () -> PlantManager
         return self.__plantManager
     @property
     def Plants(self):
-        #type: () -> list[P.Plant]
+        #type: () -> list[Plant]
         return self.__plants
     @property
     def SensorData(self):
@@ -45,7 +45,7 @@ class PlantEventData:
         return self.__error
     @property
     def ErrorPlants(self):
-        #type: () -> dict[P.Plant, float]
+        #type: () -> dict[Plant, float]
         return self.__errorPlants
     @property
     def Logger(self):
@@ -53,12 +53,12 @@ class PlantEventData:
         return self.__logger
     
 
-class PlantChangedEvent(E.Event):
+class PlantChangedEvent(Event):
 
     def __init__(self):
         super().__init__()
 
     def __call__(self, plant, oldValue, newValue, valueType):
-        #type: (P.Plant, object, object, str) -> None
+        #type: (Plant, object, object, str) -> None
         for eventhandler in self._eventhandlers:
             eventhandler(plant, oldValue, newValue, valueType)

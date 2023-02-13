@@ -1,6 +1,6 @@
 
 from abc import abstractmethod
-from Home.Hardware.Actors.Actor import Actor
+from ..Actor import Actor
 
 class Pump(Actor):
 

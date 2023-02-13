@@ -11,7 +11,8 @@ if(libjs == null){
 }else{
     libjs.async = false;
 }
-HOST = "http://localhost:8080"
+//use same server
+HOST = ""
 BLUETOOTHSERVICEPATH = "/root/bluetoothservice"
 PLANTMANAGERSERVICEPATH = "/root/plantmanagerservice"
 GPIOMANAGERSERVICEPATH = "/root/gpioservice"

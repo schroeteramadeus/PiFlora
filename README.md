@@ -16,13 +16,23 @@ WARNING: Debug mode will trigger on ALL other systems for bluetooth manager and 
 
 - install (via pip) miflora
 
+- (optionally) install (via pip) pyOpenSSL (though you can still run on http or put your custom certificate and key in the designated folder)
+
 - make sure bluetooth is available (especially the command "sudo hcitool lescan")
 
 ### Run the web server
 
 - python3 startWebserver.py
 
-- optionally for startWebserver.py you can also define  -www [HTML file path], -save [save file path], -sslCert [ssl certificate path], -sslKey [ssl private key path]
+- optionally for startWebserver.py you can also define  -www [HTML folder path], -save [save folder path], -sslCert [ssl certificate path], -sslKey [ssl private key path]
+
+- for a full list of editable configurations (that are run on startup when no parameters are given), feel free to change them in the Config/Config.py file
+
+### Troubleshooting
+
+- if you are running on https, make sure the certificate is registered on your client
+
+- if you are not running on localhost (127.0.0.1), make sure your firewall does not block incoming/outgoing requests on the specified port
 
 ### Example hardware setup (simplest)
 

@@ -1,7 +1,7 @@
-import Home.Hardware.Sensors.Water.WaterSensor as WS
+from .WaterSensor import WaterSensor, WATER_SENSOR_UNDER_WATER
 import time
 
-class VirtualWaterSensor(WS.WaterSensor):
+class VirtualWaterSensor(WaterSensor):
 
     def __init__(self, maximumWater, minimumWater, waterPerDay) -> None:
         #type: (bool, float, float, float) -> None
@@ -20,11 +20,11 @@ class VirtualWaterSensor(WS.WaterSensor):
 
         if waterLeft  > self.__minimumWater:
             return {
-                WS.WATER_SENSOR_UNDER_WATER: True
+                WATER_SENSOR_UNDER_WATER: True
             }
         else:
             return {
-                WS.WATER_SENSOR_UNDER_WATER: False
+                WATER_SENSOR_UNDER_WATER: False
             }
 
     def Reset(self):
