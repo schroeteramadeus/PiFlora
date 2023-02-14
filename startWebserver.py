@@ -2,47 +2,44 @@ import logging
 import os
 import ssl
 import sys
+from typing import Callable
 from ConsoleFilter import ConsoleFilter
 from Home.Webserver.Server import HybridServer, HybridServerRequestHandler
 import Home.Webserver.SSLCreator as SSLCreator
-from Home.Utils.ArgumentParser import Argument, ArgumentParser 
+from Home.Utils.ArgumentParser import Argument, ArgumentParser, Switch 
 import socket
 
 import Config.Setup.Import as Setup
 from Config.Config import Config
 
-def main(config : Config):
-
-    print("Loading data...")
-    Load(config)
-    print("Server starting on " + config.RunningDirectory)
+def main(config : Config, initFunc : Callable[[], None], closeFunc : Callable[[], None], debug = False):
+    print("Server starting on " + config.RunningDirectory + "...")
     webServer = HybridServer((config.HostAddress, config.ServerPort), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=Setup.ROOTFILE, serviceableFileExtensions=config.ServeableFileExtensions, standardpath=config.StandardPath, runningDirectory=config.RunningDirectory)
+    
+    print("Initializing Modules...")
+    initFunc()
 
     continueStart = True
     protocol = "http://"
-    print("Activating TLS 1.3")
-    if config.TSLMinimumVersion != None:
-        if TryActivateSSL(webServer, config):
-            protocol = "https://"
-        else:
-            print("Could not activate TLS")
-            continueStart = AskForYesOrNo("Do you want to continue without TLS?")
+
+    if debug:
+        print("Activating TLS 1.3...")
+        if config.TSLMinimumVersion != None:
+            if TryActivateSSL(webServer, config):
+                protocol = "https://"
+            else:
+                print("Could not activate TLS")
+                continueStart = AskForYesOrNo("Do you want to continue without TLS?")
 
     if continueStart:
         PrintServerEndpoints(config, protocol)
-
-        #TODO set up saving thread
         try:
             webServer.serve_forever()
         except KeyboardInterrupt:
             pass
         finally:
-            if Setup.PLANTMANAGER != None and Setup.PLANTMANAGER.IsRunning:
-                Setup.PLANTMANAGER.Stop()
-            if Setup.BLUETOOTHMANAGER != None and Setup.BLUETOOTHMANAGER.IsRunning():
-                Setup.BLUETOOTHMANAGER.Stop()
-            if not Setup.PLANTMANAGER.IsDebug:
-                Save(config)
+            print("Finalizing Modules...")
+            closeFunc()
             webServer.server_close()
             print("Server stopped.")
 
@@ -117,17 +114,20 @@ def CreateSSLCertInteractive(config : Config) -> bool:
 
     return created
     
+#TODO maybe save config to json
 def Save(config : Config):
-    Setup.ONSAVE(config.SaveFileFolder)
+    Setup.SaveModules(config.SaveFileFolder)
 
+#TODO maybe load config from json
 def Load(config : Config):
-    Setup.ONLOAD(config.SaveFileFolder)
+    Setup.LoadModules(config.SaveFileFolder)
 
 if __name__ == "__main__":   
-
-    #TODO try load config
-
     config = Config()
+
+    print("Loading data...")
+    Load(config)
+
     #TODO TEST REMOVE LATER
     config.TSLMinimumVersion = None
 
@@ -136,6 +136,7 @@ if __name__ == "__main__":
     argParser.addArgument(Argument("save", str))
     argParser.addArgument(Argument("sslKey", str))
     argParser.addArgument(Argument("sslCert", str))
+    argParser.addSwitch(Switch("debug"))
 
     argParser.parseArguments(sys.argv[1:])
 
@@ -143,6 +144,7 @@ if __name__ == "__main__":
     save = argParser.getParsedValue("save")
     sslKey = argParser.getParsedValue("sslKey")
     sslCert = argParser.getParsedValue("sslCert")
+    debug = argParser.getParsedValue("debug")
 
     if www != None:
         config.RunningDirectory = str(www).rstrip("/")
@@ -155,13 +157,21 @@ if __name__ == "__main__":
 
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
-    
+
     handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
+    if debug:
+        handler.setLevel(logging.DEBUG)
+    else:
+        handler.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     handler.addFilter(ConsoleFilter())
 
     root.addHandler(handler)
 
-    main(config)
+    #TODO set up saving thread
+    main(config=config, initFunc=lambda : Setup.InitModules(debug), closeFunc=Setup.CloseModules,debug=debug)
+    #if no exception happens (except KeyboardInterrupt): save
+    if not debug:
+        print("Saving data...")
+        Save(config)

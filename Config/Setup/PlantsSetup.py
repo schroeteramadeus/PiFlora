@@ -1,21 +1,25 @@
 import json
 import re
 import os
-from .InitialSetup import PLANTMANAGER, GPIOMANAGER, NOERRORRESPONSE, ROOTFILE, ListVirtualFiles, ONLOAD, ONSAVE
+from .InitialSetup import NOERRORRESPONSE, ROOTFILE, ListVirtualFiles, ONLOAD, ONSAVE, ONCLOSE, ONINIT
+from .GPIOSetup import GPIOMANAGER
 from Home.Hardware.Actors.Water.Pump import Pump
 from Home.Hardware.Actors.Water.GPIOPump import GPIOPump
-from Home.Hardware.GPIOManager import GPIOManager, GPIOTypes
+from Home.Hardware.GPIOManager import GPIOTypes
 from Home.Hardware.Sensors.Water.AlwaysActiveWaterSensor import AlwaysActiveWaterSensor
 from Home.Webserver.VirtualFile import METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
 from Home.Hardware.BluetoothManager import BluetoothManager
-import Home.Hardware.BluetoothManager as BM
 from Home.Plants.PlantManager import PlantManager
 import Home.Plants.PlantManager as PM
 from Home.Plants.Plant import Plant
 from Home.Plants.PlantConfiguration import PlantConfiguration
-from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensor, PlantSensorParameters as PSP
-from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import debugMode as MiFloraDebugMode, MiFloraPlantSensor as MiFloraPlantSensor
+from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensor
+from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor
+import Home.Hardware.Sensors.Plant.MiFloraPlantSensor as MiFloraPS
 from Home.Utils.ValueSpan import ValueSpan
+
+PLANTMANAGER = PlantManager(AlwaysActiveWaterSensor())
+
 
 def __plantmanagerStatus(file, request):
     #type: (VirtualFile, ServerRequest) -> str
@@ -30,7 +34,7 @@ def __plantmanagerStatus(file, request):
     else:
         data["error"] = {
             "set": True,
-            "message": "Bluetoothmanager not defined"
+            "message": "Plantmanager not defined"
         }
     return json.dumps(data)
 
@@ -388,45 +392,46 @@ __plantsSaveFile = "plants.json"
 
 #TODO valid JSON-formatting
 def Save(saveDirectory):
-    saveDirectory = saveDirectory.rstrip("/").rstrip("\\")
-    #type: (str) -> None
-    data = []
-    plants = PLANTMANAGER.Plants
-    for plant in plants:
-        content = {
-            "configuration":{
-                "name": plant.PlantConfiguration.Name,
-                "temperature":{
-                    "min": plant.PlantConfiguration.TemperatureSpan.Min,
-                    "max": plant.PlantConfiguration.TemperatureSpan.Max,
+    if not PLANTMANAGER.IsDebug:
+        saveDirectory = saveDirectory.rstrip("/").rstrip("\\")
+        #type: (str) -> None
+        data = []
+        plants = PLANTMANAGER.Plants
+        for plant in plants:
+            content = {
+                "configuration":{
+                    "name": plant.PlantConfiguration.Name,
+                    "temperature":{
+                        "min": plant.PlantConfiguration.TemperatureSpan.Min,
+                        "max": plant.PlantConfiguration.TemperatureSpan.Max,
+                    },
+                    "moisture":{
+                        "min": plant.PlantConfiguration.MoistureSpan.Min,
+                        "max": plant.PlantConfiguration.MoistureSpan.Max,
+                    },
+                    "light":{
+                        "min": plant.PlantConfiguration.LightSpan.Min,
+                        "max": plant.PlantConfiguration.LightSpan.Max,
+                    },
+                    "conductivity":{
+                        "min": plant.PlantConfiguration.ConductivitySpan.Min,
+                        "max": plant.PlantConfiguration.ConductivitySpan.Max,
+                    },
                 },
-                "moisture":{
-                    "min": plant.PlantConfiguration.MoistureSpan.Min,
-                    "max": plant.PlantConfiguration.MoistureSpan.Max,
+                "sensor":{
+                    "id":plant.PlantSensor.ID,
+                    "type": plant.PlantSensor.__class__.__name__,
                 },
-                "light":{
-                    "min": plant.PlantConfiguration.LightSpan.Min,
-                    "max": plant.PlantConfiguration.LightSpan.Max,
+                "pump": {
+                    "id": plant.Pump.ID,
+                    "type": plant.Pump.__class__.__name__,
                 },
-                "conductivity":{
-                    "min": plant.PlantConfiguration.ConductivitySpan.Min,
-                    "max": plant.PlantConfiguration.ConductivitySpan.Max,
-                },
-            },
-            "sensor":{
-                "id":plant.PlantSensor.ID,
-                "type": plant.PlantSensor.__class__.__name__,
-            },
-            "pump": {
-                "id": plant.Pump.ID,
-                "type": plant.Pump.__class__.__name__,
-            },
-        }
-        data.append(json.dumps(content) + "\n")
+            }
+            data.append(json.dumps(content) + "\n")
 
-    file = open(saveDirectory + "/" + __plantsSaveFile, 'w')
-    file.writelines(data)
-    file.close()
+        file = open(saveDirectory + "/" + __plantsSaveFile, 'w')
+        file.writelines(data)
+        file.close()
 
 
 def Load(saveDirectory):
@@ -488,6 +493,14 @@ def Load(saveDirectory):
                 Plant.HARDWARE_PUMP: currentPump,
                 Plant.HARDWARE_PLANTSENSOR: currentSensor,
             }))
+def onClose():
+    if PLANTMANAGER != None and PLANTMANAGER.IsRunning:
+        PLANTMANAGER.Stop()
+
+def onInit(debug : bool):
+    PM.debugMode = MiFloraPS.debugMode or debug
 
 ONLOAD += Load
 ONSAVE += Save
+ONCLOSE += onClose
+ONINIT += onInit

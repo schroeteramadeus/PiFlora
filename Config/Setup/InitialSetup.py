@@ -1,11 +1,5 @@
 from typing import Callable
-from Home.Hardware.GPIOManager import GPIOManager
-from Home.Hardware.Sensors.Water.AlwaysActiveWaterSensor import AlwaysActiveWaterSensor
 from Home.Webserver.VirtualFile import METHOD_GET, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
-from Home.Hardware.BluetoothManager import BluetoothManager
-from Home.Plants.PlantManager import PlantManager
-import Home.Plants.PlantManager as PM
-from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import debugMode as MiFloraDebugMode, MiFloraPlantSensor as MiFloraPlantSensor
 from Home.Utils.Event import Event
 
 #TODO own directory for each module
@@ -25,19 +19,15 @@ class IOEvent(Event):
 
 ONSAVE = IOEvent()
 ONLOAD = IOEvent()
+ONCLOSE = Event()
+ONINIT = Event()
 
-if MiFloraDebugMode:
-    PM.debugMode = True
-
-PLANTMANAGER = PlantManager(AlwaysActiveWaterSensor())
-
-BLUETOOTHMANAGER = BluetoothManager
-GPIOMANAGER = GPIOManager
 
 NOERRORRESPONSE = {
     "set": False,
     "message": None
 }
+
 def ListVirtualFiles(file, request):
     #type: (VirtualFile, ServerRequest) -> str
 
@@ -72,4 +62,10 @@ def SaveModules(saveFolder):
 
 def LoadModules(saveFolder):
     ONLOAD(saveFolder)
+
+def CloseModules():
+    ONCLOSE()
+
+def InitModules(debug : bool):
+    ONINIT(debug)
 

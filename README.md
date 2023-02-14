@@ -8,6 +8,8 @@ For (normal) use on a linux environment with enabled bluetooth and miflora plant
 
 WARNING: Debug mode will trigger on ALL other systems for bluetooth manager and on systems that do not have miflora installed for the plant manager - (on the webpage) descernable by the multicolored yellow status bar on the services (e.g red-yellow), see help page for more info
 
+## Example Setup
+
 ### Example software setup
 
 - install raspberry pi os
@@ -20,19 +22,6 @@ WARNING: Debug mode will trigger on ALL other systems for bluetooth manager and 
 
 - make sure bluetooth is available (especially the command "sudo hcitool lescan")
 
-### Run the web server
-
-- python3 startWebserver.py
-
-- optionally for startWebserver.py you can also define  -www [HTML folder path], -save [save folder path], -sslCert [ssl certificate path], -sslKey [ssl private key path]
-
-- for a full list of editable configurations (that are run on startup when no parameters are given), feel free to change them in the Config/Config.py file
-
-### Troubleshooting
-
-- if you are running on https, make sure the certificate is registered on your client
-
-- if you are not running on localhost (127.0.0.1), make sure your firewall does not block incoming/outgoing requests on the specified port
 
 ### Example hardware setup (simplest)
 
@@ -60,16 +49,22 @@ TODO add image of setup
 
 TODO add image of setup
 
-## Configuration via web
+## Using the system
 
-- Start the webserver on via "python3 startWebserver.py"
+### Run the web server
 
-- Put in the working directory "www"
+- python3 startWebserver.py
 
-- For the saving location you can just press enter
+- for testing use the -debug flag (no tsl and save files, modules will be run in debug mode), but keep in mind that if not set some functionalities may still run on debug mode (e.g. bluetooth on a non-linux os)
 
-- open your webbrowser and either use [your ip adress or localhost]:8080
+- optionally for startWebserver.py you can also define  -www [HTML folder path], -save [save folder path], -sslCert [ssl certificate path], -sslKey [ssl private key path]
+
+- for a full list of editable configurations (that are run on startup when no parameters are given), feel free to change them in the Config/Config.py file
+
+### Troubleshooting
+
+- if you are running on https, make sure the certificate is registered on your client
+
+- if you are not running on localhost (127.0.0.1), make sure your firewall does not block incoming/outgoing requests on the specified port
 
 - if you encounter non-trivial problems consult the help page
-
-NOTE: on debug mode the server will NOT save any changes after it was closed, also in order to change, add or delete plants the plant manager needs to be stopped first
