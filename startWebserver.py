@@ -22,7 +22,7 @@ def main(config : Config, initFunc : Callable[[], None], closeFunc : Callable[[]
     continueStart = True
     protocol = "http://"
 
-    if debug:
+    if not debug:
         print("Activating TLS 1.3...")
         if config.TSLMinimumVersion != None:
             if TryActivateSSL(webServer, config):
@@ -86,7 +86,7 @@ def TryActivateSSL(webServer : HybridServer, config : Config) -> bool:
             
             if SSLCreator.ImportResolved():
                 if AskForYesOrNo("Do you want to create a new ssl certificate?"):
-                    activated = CreateSSLCertInteractive(certfile=config.SSLCertPath,keyfile=config.SSLKeyPath)
+                    activated = CreateSSLCertInteractive(config=config)
                     if activated:
                         return TryActivateSSL(webServer=webServer, config=config)
                     else:
@@ -96,6 +96,7 @@ def TryActivateSSL(webServer : HybridServer, config : Config) -> bool:
             activated = False
 
     except Exception as e:
+        print(e)
         activated = False
                 
     return activated
@@ -127,9 +128,6 @@ if __name__ == "__main__":
 
     print("Loading data...")
     Load(config)
-
-    #TODO TEST REMOVE LATER
-    config.TSLMinimumVersion = None
 
     argParser = ArgumentParser()
     argParser.addArgument(Argument("www", str))

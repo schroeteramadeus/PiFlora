@@ -1,3 +1,6 @@
+#custom
+Config/SSL
+Config/Save
 #visual studio code cache
 .vs
 # Byte-compiled / optimized / DLL files

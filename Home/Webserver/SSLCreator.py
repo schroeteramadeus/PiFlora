@@ -24,7 +24,7 @@ def Create(
     organizationUnitName : str = "organizationUnitName",
     serialNumber : int = 0,
     validityStartInSeconds : int = 0,
-    validityEndInSeconds : int = 100*365*24*60*60,
+    validityEndInSeconds : int = 10*365*24*60*60,
     cipher : str = None,
     issuer : SSL.X509Name = None,
     keyFile : str = "private.key",
