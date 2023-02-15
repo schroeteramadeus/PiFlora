@@ -2,14 +2,12 @@
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import logging
 import sys
+import traceback
 from urllib.parse import parse_qs, urlparse, ParseResult
 import os
 from .VirtualFile import ServerRequest, VirtualFile, VirtualFileHandler, METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE
-#import Home.Plants.PlantManager as PM
-#import Home.Hardware.Sensors.Water.AlwaysActiveWaterSensor as AAWS
-import Home.Hardware.BluetoothManager as BM
 
-logger = logging.Logger(__file__)
+logger = logging.Logger(__name__)
 
 class HybridServer(HTTPServer):
     __id = 0
@@ -82,7 +80,8 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
                         response = file.Excecute(METHOD_GET, ServerRequest(self.headers, parse_qs(parsedURL.query), ""))
                         #print("Got Response", flush=True)
                     except Exception as e:
-                        print(sys.exc_info()[2])
+                        traceback.print_exc()
+                        #print(sys.exc_info()[2])
                         print(e)
                         #TODO LOG
 
@@ -121,7 +120,12 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
                     response = file.Excecute(METHOD_POST, ServerRequest(self.headers, parse_qs(parsedURL.query), self.rfile.read(int(self.headers['Content-Length']))))
                     #print("Got Response", flush=True)
                 except Exception as e:
-                    print(sys.exc_info()[2])
+                    traceback.print_exc()
+                    #for tb in sys.exc_info():
+                    #    if tb is 
+                    #    print(tb.tb_frame.f_code.co_filename + ":" + tb.tb_lineno)
+                    #print(repr(e))
+                    #print(sys.exc_info()[0])
                     print(e)
                     #TODO LOG
 

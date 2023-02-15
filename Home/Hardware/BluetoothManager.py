@@ -10,7 +10,7 @@ from sys import platform
 from ..Utils.WakeableSleep import WakeableSleep
 #"Singleton"
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 debugMode = False
 debugDeviceData = [{
     "mac":"DE:BU:G1:7a:8c",
@@ -23,7 +23,7 @@ debugDeviceData = [{
 
 
 if  "linux" not in platform:
-    logger.warning("Running Bluetoothmanager in debug mode")
+    _logger.warning("Running Bluetoothmanager in debug mode")
     debugMode = True
 
 class BluetoothManager:
@@ -44,7 +44,7 @@ class BluetoothManager:
 
     def Start():
         if not BluetoothManager.IsRunning():
-            logger.info("Bluetoothservice starting...")
+            _logger.info("Bluetoothservice starting...")
             debug = debugMode #threadsafety (hopefully)
             if not debug:
                 BluetoothManager.__deviceFetchTaskCancellationToken = threading.Event()
@@ -53,22 +53,22 @@ class BluetoothManager:
             
             BluetoothManager.__startedInDebugMode = debug
             BluetoothManager.__running = True
-            logger.debug("Bluetoothservice is now running")
+            _logger.debug("Bluetoothservice is now running")
 
     def Stop():
         if BluetoothManager.IsRunning():
-            logger.info("Bluetoothservice stopping...")
+            _logger.info("Bluetoothservice stopping...")
             if not BluetoothManager.__startedInDebugMode:
                 if BluetoothManager.__deviceFetchTask != None:
-                    logger.debug("Stopping fetch task...")
+                    _logger.debug("Stopping fetch task...")
                     BluetoothManager.__deviceFetchTaskCancellationToken.set()
                     BluetoothManager.__deviceFetchTask.join()
-                logger.debug("Cleanup...")
+                _logger.debug("Cleanup...")
                 BluetoothManager.__deviceFetchTaskCancellationToken = None
                 BluetoothManager.__deviceFetchTask = None
             BluetoothManager.__startedInDebugMode = False
             BluetoothManager.__running = False
-            logger.debug("Bluetoothservice has now stopped")
+            _logger.debug("Bluetoothservice has now stopped")
 
     def GetAvailableDevices():
         #type: () -> list[dict[str,str]]
@@ -91,14 +91,14 @@ class BluetoothManager:
         return output
 
     def __fetchScanData(cancellationToken : threading.Event, scanningTime : float):
-        logger.info("Fetching task started...")
+        _logger.info("Fetching task started...")
 
         while True:
             if cancellationToken.is_set():
                 break
             newAvailableDevices = [] #type: list[dict[str,str]]
             deviceScanTask = None #type:subprocess.Popen
-            logger.info("Starting new bluetooth scan...")
+            _logger.info("Starting new bluetooth scan...")
             while deviceScanTask == None:
                 deviceScanTask = subprocess.Popen("sudo timeout -s INT {}s hcitool lescan".format(scanningTime), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
                 time.sleep(5)
@@ -109,11 +109,11 @@ class BluetoothManager:
                     error = deviceScanTask.stderr.read()
                     if bool(error):
                         print(error.rstrip("\n"))
-                        logger.debug("Bluetooth currently not available, retrying...")
+                        _logger.debug("Bluetooth currently not available, retrying...")
                         deviceScanTask = None
-            logger.debug("Scanning for devices...")
+            _logger.debug("Scanning for devices...")
             deviceScanTask.wait(scanningTime)
-            logger.debug("Scanned devices")
+            _logger.debug("Scanned devices")
             if cancellationToken.is_set():
                 break
             deviceScanTask.stdout.flush()
@@ -121,19 +121,19 @@ class BluetoothManager:
             lines = deviceScanTask.stdout.readlines()
             error = deviceScanTask.stderr.read()
             if not bool(error):
-                logger.debug("Scan successful")
+                _logger.debug("Scan successful")
 
-                logger.info("Start fetching data...")
+                _logger.info("Start fetching data...")
                 for line in lines:
                     line = line.rstrip("\n")
-                    logger.debug("Bluetooth manager read: " + line)
+                    _logger.debug("Bluetooth manager read: " + line)
 
                     #if(re.match("\[sudo\]", line)):
                     #    print("Bluetooth manager requests password...")
                     #    deviceScanTask.stdin.writelines([input("Password for bluetoothservice needed: ")])
                     #    deviceScanTask.stdin.flush()
                     if re.match("([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2} *)", line):
-                        logger.debug("Bluetooth manager: Device found")
+                        _logger.debug("Bluetooth manager: Device found")
                         args = line.split(" ")
                         mac = args[0]
                         name = ""
@@ -147,9 +147,9 @@ class BluetoothManager:
                         if device not in newAvailableDevices:
                             newAvailableDevices.append(device)
                         #TODO maybe delete older not found devices?
-                        logger.debug("Device " + name + " [" + mac + "] added")
+                        _logger.debug("Device " + name + " [" + mac + "] added")
                     else:
-                        logger.debug("Bluetooth manager: Line ignored")
+                        _logger.debug("Bluetooth manager: Line ignored")
                     if cancellationToken.is_set():
                         break
                 
@@ -157,19 +157,19 @@ class BluetoothManager:
                     BluetoothManager.__availableDevices = newAvailableDevices
 
                 if not cancellationToken.is_set():
-                    logger.debug("Bluetooth manager: Sleep")
+                    _logger.debug("Bluetooth manager: Sleep")
                     #no new data
                     WakeableSleep(cancellationToken, 60)
                 else:
                     break
             else:
-                logger.warning("Bluetooth manager encountered error: " + error)
-                logger.warning("Bluetooth manager tries restarting...")
+                _logger.warning("Bluetooth manager encountered error: " + error)
+                _logger.warning("Bluetooth manager tries restarting...")
                 time.sleep(5)
         if cancellationToken.is_set():
-            logger.debug("Fetching task ended")
+            _logger.debug("Fetching task ended")
         else:
-            logger.warning("Fetching task ended unexpectedly")
+            _logger.warning("Fetching task ended unexpectedly")
 
                 # BluetoothManager.Stop()
                 # deviceScanTask.kill()

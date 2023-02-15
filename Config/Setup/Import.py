@@ -1,4 +1,4 @@
-from .InitialSetup import ROOTFILE, LoadModules, SaveModules, InitModules, CloseModules
-from . import GPIOSetup
-from . import BluetoothSetup
-from . import PlantsSetup
+from .InitialSetup import ServerModule, SystemModule
+from .GPIOSetup import GPIOModule
+from .BluetoothSetup import BluetoothModule
+from .PlantsSetup import PlantModule

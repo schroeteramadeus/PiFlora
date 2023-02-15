@@ -1,6 +1,7 @@
 #custom
 Config/SSL
 Config/Save
+*.log
 #visual studio code cache
 .vs
 # Byte-compiled / optimized / DLL files

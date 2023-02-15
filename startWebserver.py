@@ -1,23 +1,63 @@
 import logging
+from Home.Utils.ArgumentParser import Argument, ArgumentParser, Switch 
+from Config.Config import Config
 import os
 import ssl
 import sys
 from typing import Callable
-from ConsoleFilter import ConsoleFilter
-from Home.Webserver.Server import HybridServer, HybridServerRequestHandler
-import Home.Webserver.SSLCreator as SSLCreator
-from Home.Utils.ArgumentParser import Argument, ArgumentParser, Switch 
+#from ConsoleFilter import ConsoleFilter
 import socket
 
-import Config.Setup.Import as Setup
-from Config.Config import Config
+if __name__ == "__main__":
+    config = Config()
 
-def main(config : Config, initFunc : Callable[[], None], closeFunc : Callable[[], None], debug = False):
+    argParser = ArgumentParser()
+    argParser.addArgument(Argument("www", str))
+    argParser.addArgument(Argument("save", str))
+    argParser.addArgument(Argument("sslKey", str))
+    argParser.addArgument(Argument("sslCert", str))
+    argParser.addSwitch(Switch("debug"))
+
+    argParser.parseArguments(sys.argv[1:])
+
+    www = argParser.getParsedValue("www")
+    save = argParser.getParsedValue("save")
+    sslKey = argParser.getParsedValue("sslKey")
+    sslCert = argParser.getParsedValue("sslCert")
+    debug = argParser.getParsedValue("debug")
+
+    if www != None:
+        config.RunningDirectory = str(www).rstrip("/")
+    if save != None:
+        config.SaveFileFolder = str(save).rstrip("/")
+    if sslKey != None:
+        config.SSLKeyPath = str(sslKey).rstrip("/")
+    if sslCert != None:
+        config.SSLCertPath = str(sslCert).rstrip("/")
+
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+
+    _consoleHandler = logging.StreamHandler(sys.stdout)
+    _consoleHandler.setFormatter(formatter)
+    #_consoleHandler.addFilter(ConsoleFilter())
+    if debug:
+        _consoleHandler.setLevel(logging.DEBUG)
+    else:
+        _consoleHandler.setLevel(logging.WARNING)
+        
+    root.addHandler(_consoleHandler)
+
+
+from Home.Webserver.Server import HybridServer, HybridServerRequestHandler
+from Home.Webserver.VirtualFile import VirtualFile
+import Home.Webserver.SSLCreator as SSLCreator
+import Config.Setup.Import as Setup
+
+def main(config : Config, virtualRootFile : VirtualFile, onServerCloseFunc : Callable[[], None], debug = False):
     print("Server starting on " + config.RunningDirectory + "...")
-    webServer = HybridServer((config.HostAddress, config.ServerPort), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=Setup.ROOTFILE, serviceableFileExtensions=config.ServeableFileExtensions, standardpath=config.StandardPath, runningDirectory=config.RunningDirectory)
-    
-    print("Initializing Modules...")
-    initFunc()
+    webServer = HybridServer((config.HostAddress, config.ServerPort), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=virtualRootFile, serviceableFileExtensions=config.ServeableFileExtensions, standardpath=config.StandardPath, runningDirectory=config.RunningDirectory)
 
     continueStart = True
     protocol = "http://"
@@ -38,8 +78,7 @@ def main(config : Config, initFunc : Callable[[], None], closeFunc : Callable[[]
         except KeyboardInterrupt:
             pass
         finally:
-            print("Finalizing Modules...")
-            closeFunc()
+            onServerCloseFunc()
             webServer.server_close()
             print("Server stopped.")
 
@@ -114,62 +153,24 @@ def CreateSSLCertInteractive(config : Config) -> bool:
         created = False
 
     return created
-    
-#TODO maybe save config to json
-def Save(config : Config):
-    Setup.SaveModules(config.SaveFileFolder)
 
-#TODO maybe load config from json
-def Load(config : Config):
-    Setup.LoadModules(config.SaveFileFolder)
+def __onServerClose():
+    print("Closing Modules...")
+    Setup.ServerModule.CloseModules()
 
-if __name__ == "__main__":   
-    config = Config()
+if __name__ == "__main__":
+    print("Starting modules...")
+    Setup.ServerModule.InitModules(debug)
 
     print("Loading data...")
-    Load(config)
-
-    argParser = ArgumentParser()
-    argParser.addArgument(Argument("www", str))
-    argParser.addArgument(Argument("save", str))
-    argParser.addArgument(Argument("sslKey", str))
-    argParser.addArgument(Argument("sslCert", str))
-    argParser.addSwitch(Switch("debug"))
-
-    argParser.parseArguments(sys.argv[1:])
-
-    www = argParser.getParsedValue("www")
-    save = argParser.getParsedValue("save")
-    sslKey = argParser.getParsedValue("sslKey")
-    sslCert = argParser.getParsedValue("sslCert")
-    debug = argParser.getParsedValue("debug")
-
-    if www != None:
-        config.RunningDirectory = str(www).rstrip("/")
-    if save != None:
-        config.SaveFileFolder = str(save).rstrip("/")
-    if sslKey != None:
-        config.SSLKeyPath = str(sslKey).rstrip("/")
-    if sslCert != None:
-        config.SSLCertPath = str(sslCert).rstrip("/")
-
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler(sys.stdout)
-    if debug:
-        handler.setLevel(logging.DEBUG)
-    else:
-        handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    handler.addFilter(ConsoleFilter())
-
-    root.addHandler(handler)
+    Setup.ServerModule.LoadModules(config.SaveFileFolder)
+    #Load(config, Setup)
 
     #TODO set up saving thread
-    main(config=config, initFunc=lambda : Setup.InitModules(debug), closeFunc=Setup.CloseModules,debug=debug)
+    main(config=config, virtualRootFile=Setup.SystemModule.Get().RootFile, onServerCloseFunc=__onServerClose,debug=debug)
     #if no exception happens (except KeyboardInterrupt): save
     if not debug:
         print("Saving data...")
-        Save(config)
+        Setup.ServerModule.SaveModules(config.SaveFileFolder)
+        #Save(config, Setup)
+

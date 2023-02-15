@@ -10,7 +10,7 @@ import threading
 from ..Utils.WakeableSleep import WakeableSleep
 from ..Hardware.Sensors.Plant.PlantSensor import PlantSensor
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 debugMode = False
 
@@ -25,7 +25,7 @@ class PlantManager:
         #type: (WaterSensor, list[Plants]) -> None
         self.__id = PlantManager.__staticId + 1
         PlantManager.__staticId = PlantManager.__staticId + 1
-        self.__logger = logger.getChild("PlantManager" + str(self.__id))
+        self.__logger = _logger.getChild("PlantManager" + str(self.__id))
         self.__logger.info("Initializing plant manager...")
         #type: (list[Plant]) -> None
         self.__sensorsLock = threading.Lock()
