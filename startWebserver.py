@@ -55,6 +55,8 @@ from Home.Webserver.VirtualFile import VirtualFile
 import Home.Webserver.SSLCreator as SSLCreator
 import Config.Setup.Import as Setup
 
+#TODO logging
+
 def main(config : Config, virtualRootFile : VirtualFile, onServerCloseFunc : Callable[[], None], debug = False):
     print("Server starting on " + config.RunningDirectory + "...")
     webServer = HybridServer((config.HostAddress, config.ServerPort), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=virtualRootFile, serviceableFileExtensions=config.ServeableFileExtensions, standardpath=config.StandardPath, runningDirectory=config.RunningDirectory)

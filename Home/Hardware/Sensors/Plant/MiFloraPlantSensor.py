@@ -17,7 +17,7 @@ try:
     _importResolved = True
 except ImportError or ModuleNotFoundError:
     #print("Could not import Module: MiFlora, Running " + __file__ + " now in Debugmode")
-    logger.warning("Could not import Module: MiFlora, Running " + __file__ + " now in Debugmode")
+    logger.warning("Could not import Module: MiFlora, Running " + __name__ + " now in Debugmode")
 
 import time
 from ...BluetoothManager import BluetoothManager

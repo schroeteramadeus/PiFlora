@@ -17,18 +17,6 @@ BLUETOOTHSERVICEPATH = "/root/bluetoothservice"
 PLANTMANAGERSERVICEPATH = "/root/plantmanagerservice"
 GPIOMANAGERSERVICEPATH = "/root/gpioservice"
 
-POLLSTATUSACTIVE = "active"
-POLLSTATUSDEBUG = "debug"
-POLLSTATUSINACTIVE = "inactive"
-POLLSTATUSERROR = "error"
-POLLSTATUSPOLLING = "polling"
-
-POLLSTATUSTEXTACTIVE = "Active"
-POLLSTATUSTEXTDEBUG = "Debug"
-POLLSTATUSTEXTINACTIVE = "Inactive"
-POLLSTATUSTEXTERROR = "Error"
-POLLSTATUSTEXTPOLLING = "Polling..."
-
 MIFLORAPLANTSENSORTYPE = "MiFloraPlantSensor"
 GPIOPUMPTYPE = "GPIOPump"
 
@@ -102,7 +90,7 @@ function stopPlantmanager(el) {
     xhttp.open("GET", HOST + PLANTMANAGERSERVICEPATH + "/switch?running=false", true);
     xhttp.send();
 }
-function updateSetup(body, row, prefix, newDisplay = "table-row", readyFunc = ()=>{}) {
+function updateSetup(body, row, prefix, newDisplay = "table-row", readyFunc = ()=>{}, async = true) {
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
@@ -112,7 +100,7 @@ function updateSetup(body, row, prefix, newDisplay = "table-row", readyFunc = ()
             readyFunc();
         }
     };
-    xhttp.open("GET", HOST + PLANTMANAGERSERVICEPATH + "/plants", true);
+    xhttp.open("GET", HOST + PLANTMANAGERSERVICEPATH + "/plants", async);
     xhttp.send();
 }
 

@@ -110,6 +110,12 @@ li a{
 .dataTable tr{
     border-bottom: 1px solid var(--color-pallette-darkest);
 }
+.dataTable td{
+    padding-right: 10px;
+}
+.dataTable td:last-child{
+    padding-right: 0px;
+}
 .dataTable thead{
     border-bottom: 2px solid var(--color-pallette-darkest);
 }

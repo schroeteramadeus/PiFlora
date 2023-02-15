@@ -23,14 +23,14 @@ class VirtualLogger(logging.Handler):
                 self.__records.pop()
             self.__records.append(record)
 
-    def Fetch(self, minimumLevel: int = 0, filter:str = "") -> list[dict[str,str | int | float]]:
+    def Fetch(self, minimumLevel: int = 0, filter:str = "") -> list[dict[str,str | int]]:
         logs = []
         expression = re.compile(filter)
 
         with self.__recordsLock:
             for record in self.__records:
                 data = {}
-                data["time"] = record.msecs
+                data["time"] = record.asctime
                 data["message"] = record.message
                 data["level"] = record.levelname
                 data["logger"] = record.name
@@ -165,7 +165,7 @@ class SystemModule(ServerModule):
         self.__logFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,self.__getLogs))
 
         self.__logSwitch = VirtualFile(self.__logFile, "switch")
-        self.__logSwitch.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,self.__getLogs))
+        self.__logSwitch.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,self.__setLogger))
 
     @property
     def NoErrorResponse(self) -> dict[str]:
@@ -206,7 +206,7 @@ class SystemModule(ServerModule):
     def __getLogs(self,file, request):
         #type: (VirtualFile, ServerRequest) -> str
         data = {}
-        data["error"] = __systemMod.NoErrorResponse
+        data["error"] = self.NoErrorResponse
 
         filter = "_*"
         level = logging.DEBUG #type: logging._Level
@@ -214,8 +214,24 @@ class SystemModule(ServerModule):
         if "filter" in request.GetParameters:
             filter = str(request.GetParameters["filter"][0])
         if "level" in request.GetParameters:
-            level = str(request.GetParameters["level"][0])
-            #TODO level to number
+            levelText = str(request.GetParameters["level"][0])
+            try:
+                level = getattr(logging, levelText.upper())
+            except Exception as e:
+                level = logging.DEBUG
+                data["error"] = {
+                    "set": True,
+                    "message": "Level " + levelText + " not known, returning all logs for level DEBUG instead"
+                }
+
+            # if level == "debug" or level == "all":
+            #     level = logging.DEBUG
+            # elif level == "info" or level == "information" or level == "":
+            #     level = logging.INFO
+            # elif level == "info" or level == "information" or level == "":
+            #     level = logging.WARNING
+            # elif level == "warn" or level == "warning":
+            #     level = logging.ERROR
 
         data["logs"] = self.__onlineHandler.Fetch(minimumLevel=level, filter=filter)
 

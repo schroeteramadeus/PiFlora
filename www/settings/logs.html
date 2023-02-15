@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>System</title>
+        <script src="/lib.js"></script>
+        <script src="ajax.js"></script>
+        <link rel="stylesheet" href="/style.css">
+        <meta http-Equiv="Cache-Control" Content="no-cache" />
+        <meta http-Equiv="Pragma" Content="no-cache" />
+        <meta http-Equiv="Expires" Content="0" />
+    </head>
+    <body onload="
+        var templateRow = document.getElementById('log');
+        document.getElementById('logsTable_body').innerHTML = '';
+
+        console.log('Polling new data...');
+        updateLogs(document.getElementById('logsTable_body'), templateRow, 'data');
+
+        setInterval(function() {
+            console.log('Polling new data...');
+            updateLogs(document.getElementById('logsTable_body'), templateRow, 'data');
+        }, 5000);
+
+    ">
+        <h1 class="center">Logs</h1>
+        <br />
+        <div class="center">
+            <!--TODO filter for logs-->
+        </div>
+        <br />
+        <table id="logsTable" class="maxWidth dataTable">
+            <thead class="maxWidth">
+                <tr>
+                    <th>Severity</th>
+                    <th>Time</th>
+                    <th>Logger</th>
+                    <th>Message</th>
+                    <th>Line</th>
+                </tr>
+            </thead>
+            <tbody id="logsTable_body" class="maxWidth">
+                <tr id="log" style="display:none;" data-poll-index="data_time">
+                    <td data-poll="data_level" data-poll-populate="innerHTML">ERROR</td>
+                    <td data-poll="data_time" data-poll-populate="innerHTML">ERROR</td>
+                    <td data-poll="data_logger" data-poll-populate="innerHTML">ERROR</td>
+                    <td data-poll="data_message" data-poll-populate="innerHTML">ERROR</td>
+                    <td data-poll="data_line" data-poll-populate="innerHTML">ERROR</td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>

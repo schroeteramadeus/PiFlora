@@ -1,3 +1,15 @@
+POLLSTATUSACTIVE = "active"
+POLLSTATUSDEBUG = "debug"
+POLLSTATUSINACTIVE = "inactive"
+POLLSTATUSERROR = "error"
+POLLSTATUSPOLLING = "polling"
+
+POLLSTATUSTEXTACTIVE = "Active"
+POLLSTATUSTEXTDEBUG = "Debug"
+POLLSTATUSTEXTINACTIVE = "Inactive"
+POLLSTATUSTEXTERROR = "Error"
+POLLSTATUSTEXTPOLLING = "Polling..."
+
 function changeView(iFrame, url){
     iFrame.src = url;
 }
