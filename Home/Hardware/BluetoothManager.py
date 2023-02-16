@@ -26,6 +26,14 @@ if  "linux" not in platform:
     _logger.warning("Running Bluetoothmanager in debug mode")
     debugMode = True
 
+def IsDebugMode():
+    global debugMode
+    return debugMode
+
+def SetDebugMode(value: bool):
+    global debugMode
+    debugMode = value
+
 class BluetoothManager:
     __startedInDebugMode = False
     __availableDevices = [] #type: list[dict[str,str]] #name and mac
@@ -39,6 +47,7 @@ class BluetoothManager:
         return BluetoothManager.__running
 
     def IsDebug() -> bool:
+        global debugMode
         #type: () -> bool
         return (debugMode and not BluetoothManager.IsRunning()) or BluetoothManager.__startedInDebugMode
 

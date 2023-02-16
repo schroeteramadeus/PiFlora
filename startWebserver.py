@@ -1,15 +1,30 @@
 import logging
 from Home.Utils.ArgumentParser import Argument, ArgumentParser, Switch 
-from Config.Config import Config
+from Home.Webserver.Config.Config import Config
 import os
 import ssl
 import sys
 from typing import Callable
 #from ConsoleFilter import ConsoleFilter
 import socket
+from Home.Webserver.VirtualFile import VirtualFile
 
 if __name__ == "__main__":
-    config = Config()
+
+    config = Config(configFile = os.getcwd() + "/config/server.conf",
+                    standardPath = "index.html",
+                    hostAddress = "127.0.0.1",
+                    serverPort = 8080,
+                    title = "Home",
+                    serveableFileExtensions = (".html", ".htm", ".ico", ".png", ".svg", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min", ".json", ".map"),
+                    rootFile = VirtualFile(None, "root"),
+                    tslMinimumVersion = ssl.TLSVersion.TLSv1_3,
+                    debug = bool,
+                    wwwFolder = os.getcwd() + "/www",
+                    saveFolder = os.getcwd() + "/config/save",
+                    sslKeyPath = os.getcwd() + "/config/ssl/cert.key",
+                    sslCertPath = os.getcwd() + "/config/ssl/cert.csr",
+                 )
 
     argParser = ArgumentParser()
     argParser.addArgument(Argument("www", str))
@@ -24,7 +39,7 @@ if __name__ == "__main__":
     save = argParser.getParsedValue("save")
     sslKey = argParser.getParsedValue("sslKey")
     sslCert = argParser.getParsedValue("sslCert")
-    debug = argParser.getParsedValue("debug")
+    config.Debug = argParser.getParsedValue("debug")
 
     if www != None:
         config.RunningDirectory = str(www).rstrip("/")
@@ -42,7 +57,7 @@ if __name__ == "__main__":
     _consoleHandler = logging.StreamHandler(sys.stdout)
     _consoleHandler.setFormatter(formatter)
     #_consoleHandler.addFilter(ConsoleFilter())
-    if debug:
+    if config.Debug:
         _consoleHandler.setLevel(logging.DEBUG)
     else:
         _consoleHandler.setLevel(logging.WARNING)
@@ -51,20 +66,19 @@ if __name__ == "__main__":
 
 
 from Home.Webserver.Server import HybridServer, HybridServerRequestHandler
-from Home.Webserver.VirtualFile import VirtualFile
 import Home.Webserver.SSLCreator as SSLCreator
-import Config.Setup.Import as Setup
+import Home.Webserver.Config.Setup.Import as Setup
 
 #TODO logging
 
-def main(config : Config, virtualRootFile : VirtualFile, onServerCloseFunc : Callable[[], None], debug = False):
+def main(config : Config, onServerCloseFunc : Callable[[], None]):
     print("Server starting on " + config.RunningDirectory + "...")
-    webServer = HybridServer((config.HostAddress, config.ServerPort), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=virtualRootFile, serviceableFileExtensions=config.ServeableFileExtensions, standardpath=config.StandardPath, runningDirectory=config.RunningDirectory)
+    webServer = HybridServer((config.HostAddress, config.ServerPort), RequestHandlerClass=HybridServerRequestHandler,virtualRootFile=config.RootFile, serviceableFileExtensions=config.ServeableFileExtensions, standardpath=config.StandardPath, runningDirectory=config.RunningDirectory)
 
     continueStart = True
     protocol = "http://"
 
-    if not debug:
+    if not config.Debug:
         print("Activating TLS 1.3...")
         if config.TSLMinimumVersion != None:
             if TryActivateSSL(webServer, config):
@@ -156,23 +170,23 @@ def CreateSSLCertInteractive(config : Config) -> bool:
 
     return created
 
-def __onServerClose():
+def __onServerClose(config : Config):
     print("Closing Modules...")
-    Setup.ServerModule.CloseModules()
+    Setup.ServerModule.CloseModules(config)
 
 if __name__ == "__main__":
     print("Starting modules...")
-    Setup.ServerModule.InitModules(debug)
+    Setup.ServerModule.InitModules(config)
 
     print("Loading data...")
-    Setup.ServerModule.LoadModules(config.SaveFileFolder)
+    Setup.ServerModule.LoadModules(config)
     #Load(config, Setup)
 
     #TODO set up saving thread
-    main(config=config, virtualRootFile=Setup.SystemModule.Get().RootFile, onServerCloseFunc=__onServerClose,debug=debug)
+    main(config=config, onServerCloseFunc=lambda : __onServerClose(config))
     #if no exception happens (except KeyboardInterrupt): save
-    if not debug:
+    if not config.Debug:
         print("Saving data...")
-        Setup.ServerModule.SaveModules(config.SaveFileFolder)
+        Setup.ServerModule.SaveModules(config)
         #Save(config, Setup)
 

@@ -25,6 +25,14 @@ from .PlantSensor import PlantSensor, PlantSensorParameters
 
 debugMode = not _importResolved
 
+def IsDebugMode():
+    global debugMode
+    return debugMode
+def SetDebugMode(value : bool):
+    global debugMode
+    debugMode = value
+
+
 #TODO add debug mode
 class MiFloraPlantSensor(PlantSensor):
     
@@ -32,6 +40,7 @@ class MiFloraPlantSensor(PlantSensor):
 
     def __init__(self, mac) -> None:
         #type: (str) -> None
+        global debugMode
         super().__init__()
         self._id = mac #type: str
         self.__isDebugMode = False

@@ -2,9 +2,9 @@ import json
 import re
 from typing import Type
 from .InitialSetup import ServerModule, SystemModule
-from Home.Hardware.GPIOManager import GPIOManager, GPIOTypes
-from Home.Webserver.VirtualFile import METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
-from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor as MiFloraPlantSensor
+from ....Hardware.GPIOManager import GPIOManager, GPIOTypes
+from ...VirtualFile import METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
+from ....Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor as MiFloraPlantSensor
 
 class GPIOModule(ServerModule):
     def __init__(self) -> None:
@@ -21,10 +21,10 @@ class GPIOModule(ServerModule):
     def OnClose(self) -> None:
         pass
 
-    def OnInit(self, debug : bool) -> None:
+    def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:
         self.__systemModule = SystemModule.Get()
         
-        self.__gpioServiceFile = self.__systemModule.RootFile.AddNewChildFile("gpioservice")
+        self.__gpioServiceFile = rootFile.AddNewChildFile("gpioservice")
         self.__gpioServiceFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.__systemModule.ListVirtualFiles))
 
         self.__gpioServiceGPIOFile = self.__gpioServiceFile.AddNewChildFile("gpios")

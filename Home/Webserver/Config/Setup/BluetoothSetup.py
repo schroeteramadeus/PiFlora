@@ -2,10 +2,9 @@ import json
 import re
 from typing import Type
 from .InitialSetup import ServerModule, SystemModule
-from Home.Webserver.VirtualFile import METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
-from Home.Hardware.BluetoothManager import BluetoothManager
-import Home.Hardware.BluetoothManager as BM
-from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor as MiFloraPlantSensor
+from ...VirtualFile import METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
+from ....Hardware.BluetoothManager import BluetoothManager, SetDebugMode as BluetoothManagerSetDebugMode, IsDebugMode as BluetoothManagerIsDebugMode
+from ....Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor as MiFloraPlantSensor
 
 class BluetoothModule(ServerModule):
     def __init__(self) -> None:
@@ -25,12 +24,12 @@ class BluetoothModule(ServerModule):
         if self.__bluetoothManager != None and self.__bluetoothManager.IsRunning():
             self.__bluetoothManager.Stop()
 
-    def OnInit(self, debug : bool) -> None:
+    def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:        
         self.__systemModule = SystemModule.Get()
         
-        BM.debugMode = debug or BM.debugMode
+        BluetoothManagerSetDebugMode(debug or BluetoothManagerIsDebugMode())
 
-        self.__bluetoothServiceFile = self.__systemModule.RootFile.AddNewChildFile("bluetoothservice") #type: VirtualFile
+        self.__bluetoothServiceFile = rootFile.AddNewChildFile("bluetoothservice") #type: VirtualFile
         self.__bluetoothServiceFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.__systemModule.ListVirtualFiles))
 
         self.__bluetoothServiceStatusFile = self.__bluetoothServiceFile.AddNewChildFile("status")
@@ -71,7 +70,7 @@ class BluetoothModule(ServerModule):
             if "debug" in request.GetParameters:
                 value = str(request.GetParameters["debug"][0])
                 if self.__bluetoothManager.IsDebug() and not value:
-                    BM.debugMode = value
+                    BluetoothManagerSetDebugMode(value)
                     if self.__bluetoothManager.IsRunning():
                         self.__bluetoothManager.Stop()
                         self.__bluetoothManager.Start()

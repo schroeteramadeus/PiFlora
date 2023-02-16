@@ -14,6 +14,14 @@ _logger = logging.getLogger(__name__)
 
 debugMode = False
 
+def IsDebugMode():
+    global debugMode
+    return debugMode
+
+def SetDebugMode(value : bool):
+    global debugMode
+    debugMode = value
+
 class PlantManager:
 
     __staticId = 0
@@ -118,6 +126,7 @@ class PlantManager:
 
     @property
     def IsDebug(self):
+        global debugMode
         #type: () -> bool
         return (debugMode and not self.IsRunning) or self.__startedInDebugMode
     

@@ -5,7 +5,7 @@ from urllib.parse import ParseResult, parse_qs, urlparse
 #TODO add header class (with method, filetypes, etc.)
 #TODO use header class for bound function distinction
 
-class __VirtualFileType:
+class _VirtualFileType:
     def __init__(self, contentType) -> None:
         self.__contentType = contentType
 
@@ -16,11 +16,11 @@ class __VirtualFileType:
     #def __eq__(self, obj):
     #    return isinstance(obj, __VirtualFileType) and obj.ContentType == self.ContentType
 
-TYPE_HTMLFILE = __VirtualFileType("text/html")
-TYPE_JSONFILE = __VirtualFileType("application/json")
+TYPE_HTMLFILE = _VirtualFileType("text/html")
+TYPE_JSONFILE = _VirtualFileType("application/json")
 
 
-class __VirtualFileMethod:
+class _VirtualFileMethod:
     def __init__(self, method) -> None:
         #type: (str) -> None
         self.__method = method
@@ -33,8 +33,8 @@ class __VirtualFileMethod:
     #def __eq__(self, obj):
     #    return isinstance(obj, __VirtualFileMethod) and obj.Name == self.Name
 
-METHOD_GET = __VirtualFileMethod("GET")
-METHOD_POST = __VirtualFileMethod("POST")
+METHOD_GET = _VirtualFileMethod("GET")
+METHOD_POST = _VirtualFileMethod("POST")
 
 class ServerRequest:
     def __init__(self, headers, getParams, data) -> None:
@@ -61,7 +61,7 @@ class ServerRequest:
 class VirtualFileHandler:
 
     def __init__(self, method, type, func) -> None:
-        #type: (__VirtualFileMethod, __VirtualFileType, Callable[[VirtualFile, ParseResult], str]) -> None
+        #type: (_VirtualFileMethod, _VirtualFileType, Callable[[VirtualFile, ParseResult], str]) -> None
         self.__method = method
         self.__func = func
         self.__type = type
@@ -89,7 +89,7 @@ class VirtualFile:
             self.__name = name.lower()
             self.__parent = parent
             self.__childs = {} #type: dict[str, VirtualFile]
-            self.__fileHandlers = {} #type: dict[__VirtualFileMethod, VirtualFileHandler]
+            self.__fileHandlers = {} #type: dict[_VirtualFileMethod, VirtualFileHandler]
             
             if self.__parent != None:
                 if not self.__parent.FileExists(self.__name):
@@ -193,21 +193,21 @@ class VirtualFile:
         return self.__parent
 
     def Excecute(self, method, data):
-        #type: (__VirtualFileMethod, ServerRequest) -> str
+        #type: (_VirtualFileMethod, ServerRequest) -> str
         if self.HasMethodHandler(method):
             return self.__fileHandlers[method].excecute(self,data)
         else:
             raise AttributeError("No such method: " + method.Name + " in " + self.FullPath)
 
     def HasMethodHandler(self, method):
-        #type: (__VirtualFileMethod) -> str
+        #type: (_VirtualFileMethod) -> str
         if method in self.__fileHandlers:
             return True
         else:
             return False
 
     def GetMethodHandler(self, method):
-        #type: (__VirtualFileMethod) -> VirtualFileHandler
+        #type: (_VirtualFileMethod) -> VirtualFileHandler
         if self.HasMethodHandler(method):
             return self.__fileHandlers[method]
         else:

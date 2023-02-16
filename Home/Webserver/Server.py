@@ -2,10 +2,11 @@
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import logging
 import sys
+import time
 import traceback
 from urllib.parse import parse_qs, urlparse, ParseResult
 import os
-from .VirtualFile import ServerRequest, VirtualFile, VirtualFileHandler, METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE
+from .VirtualFile import ServerRequest, VirtualFile, _VirtualFileMethod, VirtualFileHandler, METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE
 
 logger = logging.Logger(__name__)
 
@@ -69,34 +70,11 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
                 #print("Serving file: " + os.getcwd() + "/" + relativePath)
                 self.path = relativePath
                 
-                HybridServerRequestHandler.ServeStaticFile(self)
+                HybridServerRequestHandler.ServeStaticFile(self, 200)
             else:
-
-                file = server.RootFile.GetFileOrNone(self.path)
-                if file != None and file.HasMethodHandler(METHOD_GET):
-                    response = None #type: str | None
-                    #print("Got Virtual File: " + self.path, flush=True)
-                    try:
-                        response = file.Excecute(METHOD_GET, ServerRequest(self.headers, parse_qs(parsedURL.query), ""))
-                        #print("Got Response", flush=True)
-                    except Exception as e:
-                        traceback.print_exc()
-                        #print(sys.exc_info()[2])
-                        print(e)
-                        #TODO LOG
-
-                    if response != None:
-                        self.send_response(200)
-                        self.send_header("Content-type", file.GetMethodHandler(METHOD_GET).Type.ContentType)
-                        self.end_headers()
-
-                        self.wfile.write(bytes(response, "utf-8"))
-                    else:
-                        self.SendInternalError()
-                else:
-                    self.SendFileNotFound()
+                HybridServerRequestHandler.ServeVirtualFile(self, server.RootFile.GetFileOrNone(self.path), METHOD_GET, ServerRequest(self.headers, parse_qs(parsedURL.query), ""))
         else:
-            self.SendInternalError()
+            self.SendInternalError(self)
             #raise TypeError("HybridServerRequestHandler needs a HybridServer to be run on")
 
     def do_POST(self):
@@ -113,77 +91,96 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
             server.__class__ = HybridServer
 
             file = server.RootFile.GetFileOrNone(self.path)
-            if file != None and file.HasMethodHandler(METHOD_POST):
-                response = None #type: str | None
-                #print("Got Virtual File: " + self.path, flush=True)
-                try:
-                    response = file.Excecute(METHOD_POST, ServerRequest(self.headers, parse_qs(parsedURL.query), self.rfile.read(int(self.headers['Content-Length']))))
-                    #print("Got Response", flush=True)
-                except Exception as e:
-                    traceback.print_exc()
-                    #for tb in sys.exc_info():
-                    #    if tb is 
-                    #    print(tb.tb_frame.f_code.co_filename + ":" + tb.tb_lineno)
-                    #print(repr(e))
-                    #print(sys.exc_info()[0])
-                    print(e)
-                    #TODO LOG
-
-                if response != None:
-                    self.send_response(200)
-                    self.send_header("Content-type", file.GetMethodHandler(METHOD_POST).Type.ContentType)
-                    self.end_headers()
-
-                    self.wfile.write(bytes(response, "utf-8"))
-                else:
-                    self.SendInternalError()
-            else:
-                self.SendFileNotFound()
+            HybridServerRequestHandler.ServeVirtualFile(self, server.RootFile.GetFileOrNone(self.path), METHOD_POST, ServerRequest(self.headers, parse_qs(parsedURL.query), self.rfile.read(int(self.headers['Content-Length']))))
         else:
-            self.SendInternalError()
+            self.SendInternalError(self)
 
-    def SendFileNotFound(self):
-        self.send_response(404)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.path = "Error404.html"
-        if os.path.exists(self.path) and os.path.isfile(self.path):
-            self.copyfile(self.path, self.wfile)
+    def SendFileNotFound(handler, virtual=False):
+        #type: (HybridServerRequestHandler, bool) -> None
+        handler.path = "Error404.html"
+        if not virtual and os.path.exists(handler.path) and os.path.isfile(handler.path):
+            HybridServerRequestHandler.ServeStaticFile(handler, 404)
         else:
-            self.wfile.write(bytes("<!DOCTYPE><html><body><h1>404: FILE NOT FOUND</h1></body></html>", "utf-8"))
+            response = bytes("<!DOCTYPE><html><body><h1>404: FILE NOT FOUND</h1></body></html>", "utf-8")
+            handler.send_response(404)
+            handler.send_header("Content-type", "text/html")
+            handler.send_header("Content-Length", str(len(response)))
+            handler.send_header("Last-Modified", time.time())
+            handler.end_headers()
+            handler.wfile.write(response)
     
-    def SendInternalError(self):
-        self.send_response(500)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.path = "Error500.html"
+    def SendInternalError(handler, virtual=False):
+        #type: (HybridServerRequestHandler, bool) -> None
+        handler.path = "Error500.html"
         
-        if os.path.exists(self.path) and os.path.isfile(self.path):
-            self.copyfile(self.path, self.wfile)
+        if not virtual and os.path.exists(handler.path) and os.path.isfile(handler.path):
+            try:
+                HybridServerRequestHandler.ServeStaticFile(handler, 500)
+            except RecursionError:
+                logger = handler.server.Logger #type: logging.Logger
+                logger.warning("Can not send internal server error static file")
+                HybridServerRequestHandler.SendFileNotFound(handler, True)
         else:
-            self.wfile.write(bytes("<!DOCTYPE><html><body><h1>500: INTERNAL SERVER ERROR</h1></body></html>", "utf-8"))
+            response = bytes("<!DOCTYPE><html><body><h1>500: INTERNAL SERVER ERROR</h1></body></html>", "utf-8")
+            handler.send_response(500)
+            handler.send_header("Content-type", "text/html")
+            handler.send_header("Content-Length", str(len(response)))
+            handler.send_header("Last-Modified", time.time())
+            handler.end_headers()
+            handler.wfile.write(response)
     
-    def ServeStaticFile(requestHandler):
-        #type: (HybridServerRequestHandler) -> None
+    def ServeStaticFile(handler, status):
+        #type: (HybridServerRequestHandler, int) -> None
         try:
-            file = open(requestHandler.path, 'rb')
+            file = open(handler.path, 'rb')
             try:
                 fs = os.fstat(file.fileno())
-                requestHandler.send_response(200)
-                requestHandler.send_header("Content-type", requestHandler.guess_type(requestHandler.path))
-                requestHandler.send_header("Content-Length", str(fs[6]))
-                requestHandler.send_header("Last-Modified", requestHandler.date_time_string(fs.st_mtime))
-                requestHandler.end_headers()
-                requestHandler.copyfile(file, requestHandler.wfile)
+                handler.send_response(status)
+                handler.send_header("Content-type", handler.guess_type(handler.path))
+                handler.send_header("Content-Length", str(fs[6]))
+                handler.send_header("Last-Modified", handler.date_time_string(fs.st_mtime))
+                handler.end_headers()
+                handler.copyfile(file, handler.wfile)
             except:
-                requestHandler.SendInternalError()
+                if str(status).startswith(5):
+                    handler.SendInternalError(handler)
+                else:
+                    raise RecursionError("Can not send internal server error static file")
             finally:
                 file.close()
-        except:
-            requestHandler.SendInternalError()
-       
-        
+        except not RecursionError:
+            if not str(status).startswith(5):
+                handler.SendInternalError(handler)
+            else:
+                raise RecursionError("Can not send internal server error static file")
+                       
+    def ServeVirtualFile(handler, virtualFile, method, request):
+        #type: (HybridServerRequestHandler, VirtualFile, _VirtualFileMethod, ServerRequest) -> None
+        if virtualFile != None and virtualFile.HasMethodHandler(method):
+            response = None #type: str | None
+            #print("Got Virtual File: " + self.path, flush=True)
+            try:
+                response = bytes(virtualFile.Excecute(method, request), "utf-8")
+                #print("Got Response", flush=True)
+            except Exception as e:
+                traceback.print_exc()
+                #print(sys.exc_info()[2])
+                print(e)
+                #TODO LOG
 
+            if response != None:
+                handler.send_response(200)
+                handler.send_header("Content-type", virtualFile.GetMethodHandler(method).Type.ContentType)
+                handler.send_header("Content-Length", len(response))
+                handler.send_header("Last-Modified", time.time())
+                handler.end_headers()
+
+                handler.wfile.write(response)
+            else:
+                handler.SendInternalError(handler)
+        else:
+            handler.SendFileNotFound(handler)
+       
     def log_message(self, format, *args):
         if isinstance(self.server,HybridServer):
             server = self.server #type: HybridServer

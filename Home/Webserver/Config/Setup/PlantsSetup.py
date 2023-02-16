@@ -4,19 +4,17 @@ import os
 from .InitialSetup import ServerModule, SystemModule
 from .GPIOSetup import GPIOModule
 from .BluetoothSetup import BluetoothModule
-from Home.Hardware.Actors.Water.Pump import Pump
-from Home.Hardware.Actors.Water.GPIOPump import GPIOPump
-from Home.Hardware.GPIOManager import GPIOTypes
-from Home.Hardware.Sensors.Water.AlwaysActiveWaterSensor import AlwaysActiveWaterSensor
-from Home.Webserver.VirtualFile import METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
-from Home.Plants.PlantManager import PlantManager
-import Home.Plants.PlantManager as PM
-from Home.Plants.Plant import Plant
-from Home.Plants.PlantConfiguration import PlantConfiguration
-from Home.Hardware.Sensors.Plant.PlantSensor import PlantSensor
-from Home.Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor
-import Home.Hardware.Sensors.Plant.MiFloraPlantSensor as MiFloraPS
-from Home.Utils.ValueSpan import ValueSpan
+from ....Hardware.Actors.Water.Pump import Pump
+from ....Hardware.Actors.Water.GPIOPump import GPIOPump
+from ....Hardware.GPIOManager import GPIOTypes
+from ....Hardware.Sensors.Water.AlwaysActiveWaterSensor import AlwaysActiveWaterSensor
+from ...VirtualFile import METHOD_GET, METHOD_POST, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
+from ....Plants.PlantManager import PlantManager, IsDebugMode as PlantManagerIsDebugMode, SetDebugMode as PlantManagerSetDebugMode
+from ....Plants.Plant import Plant
+from ....Plants.PlantConfiguration import PlantConfiguration
+from ....Hardware.Sensors.Plant.PlantSensor import PlantSensor
+from ....Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor, IsDebugMode as MiFloraIsDebugMode, SetDebugMode as MiFloraSetDebugMode
+from ....Utils.ValueSpan import ValueSpan
 
 class PlantModule(ServerModule):
     def __init__(self) -> None:
@@ -132,7 +130,6 @@ class PlantModule(ServerModule):
                     Plant.HARDWARE_PUMP: currentPump,
                     Plant.HARDWARE_PLANTSENSOR: currentSensor,
                 }))
-
         #create new
         if self.__plantManager == None:
             self.__plantManager = PlantManager(AlwaysActiveWaterSensor())
@@ -141,13 +138,14 @@ class PlantModule(ServerModule):
         if self.__plantManager != None and self.__plantManager.IsRunning:
             self.__plantManager.Stop()
 
-    def OnInit(self, debug : bool) -> None:
+    def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:
         self.__systemModule = SystemModule.Get()
         self.__bluetoothModule = BluetoothModule.Get()
         self.__gpioModule = GPIOModule.Get()
-        PM.debugMode = MiFloraPS.debugMode or debug
 
-        self.__plantServiceFile = self.__systemModule.RootFile.AddNewChildFile("plantmanagerservice")
+        PlantManagerSetDebugMode(MiFloraIsDebugMode() or debug)
+
+        self.__plantServiceFile = rootFile.AddNewChildFile("plantmanagerservice")
         self.__plantServiceFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.__systemModule.ListVirtualFiles))
 
         self.__plantServiceStatusFile = self.__plantServiceFile.AddNewChildFile("status")
@@ -187,6 +185,8 @@ class PlantModule(ServerModule):
 
     def __plantmanagerSwitch(self, file, request):
         #type: (VirtualFile, ServerRequest) -> str
+        global PlantManagerDebugMode
+
         if self.__plantManager != None:
             if "running" in request.GetParameters:
                 value = str(request.GetParameters["running"][0])
@@ -197,7 +197,7 @@ class PlantModule(ServerModule):
             if "debug" in request.GetParameters:
                 value = str(request.GetParameters["debug"][0])
                 if self.__plantManager.IsDebug and not value:
-                    PM.debugMode = value
+                    PlantManagerSetDebugMode(value)
                     #for plant in PLANTMANAGER.Plants:
                         #TODO Upgrade Sensors to non debug
                     #    pass

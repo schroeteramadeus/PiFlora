@@ -1,70 +1,16 @@
 from abc import ABC, abstractmethod
 import json
 import logging
-import re
-import threading
-import time
-from typing import Callable
-from Home.Webserver.VirtualFile import METHOD_GET, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
-from Home.Utils.Event import Event
-
-
-class VirtualLogger(logging.Handler):
-
-    def __init__(self, maximumRecords:int = 1000, level: int = 0) -> None:
-        super().__init__(level)
-        self.__maximumRecords = maximumRecords #type: int
-        self.__records = [] #type: list[logging.LogRecord]
-        self.__recordsLock = threading.Lock() #type : threading.Lock
-
-    def emit(self, record):
-        with self.__recordsLock:
-            if len(self.__records) >= self.__maximumRecords:
-                self.__records.pop()
-            self.__records.append(record)
-
-    def Fetch(self, minimumLevel: int = 0, filter:str = "") -> list[dict[str,str | int]]:
-        logs = []
-        expression = re.compile(filter)
-
-        with self.__recordsLock:
-            for record in self.__records:
-                data = {}
-                data["time"] = record.asctime
-                data["message"] = record.message
-                data["level"] = record.levelname
-                data["logger"] = record.name
-                data["file"] = record.filename
-                data["line"] = record.lineno
-                if record.levelno >= minimumLevel:
-                    if expression.match(data["message"]) or expression.match(data["level"]) or expression.match(data["file"]):
-                        logs.append(data)
-        return logs
-
-    @property
-    def MaximumRecords(self, value):
-        #type: (int) -> None
-        self.__maximumRecords = value
-
-#TODO own directory for each module
-class IOEvent(Event):
-    def __iadd__(self, handler):
-        #type: (Callable[[str], None]) -> None
-        self._eventhandlers.append(handler)
-        return self
-    def __isub__(self, handler):
-        #type: (Callable[[str], None]) -> None
-        self._eventhandlers.remove(handler)
-        return self
-
-    def __call__(self, saveFolder : str):
-        for eventhandler in self._eventhandlers:
-            eventhandler(saveFolder)
-
+import os
+from ..Config import Config
+from ...VirtualFile import METHOD_GET, TYPE_HTMLFILE, TYPE_JSONFILE, ServerRequest, VirtualFile, VirtualFileHandler
+from ....Utils.VirtualLogger import VirtualLogger
 
 #TODO instead of setup files
 class ServerModule(ABC):
     __Modules = {} #type:dict[type, ServerModule]
+
+    __modulesInited = False
 
     #NOTE: DO NOT LOAD DEPENDENCIES (other modules), instead use oninit()
     def __init__(self) -> None:
@@ -103,25 +49,40 @@ class ServerModule(ABC):
         pass
     #for loading dependencies of modules
     @abstractmethod
-    def OnInit(self, debug : bool) -> None:
+    def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:
         pass
 
-    def SaveModules(saveFolder):
-        for mod in ServerModule.__Modules:
-            ServerModule.__Modules[mod].OnSave(saveFolder)
+    def __getModSaveFileFolder(saveFileFolder, mod : type):
+        #type: (str, ServerModule) -> str
+        return saveFileFolder + "/" + str(mod.__name__.replace(".", "_"))
 
-    def LoadModules(saveFolder):
-        for mod in ServerModule.__Modules:
-            ServerModule.__Modules[mod].OnLoad(saveFolder)
+    def SaveModules(config : Config):
+        if ServerModule.__modulesInited:
+            if not os.path.exists(config.SaveFileFolder):
+                os.mkdir(config.SaveFileFolder)
+            for mod in ServerModule.__Modules:
+                modSaveFileFolder = ServerModule.__getModSaveFileFolder(config.SaveFileFolder, mod)
+                if not os.path.exists(modSaveFileFolder):
+                    os.mkdir(modSaveFileFolder)
+                ServerModule.__Modules[mod].OnSave(modSaveFileFolder)
 
-    #TODO check if already inited or closed
-    def CloseModules():
-        for mod in ServerModule.__Modules:
-            ServerModule.__Modules[mod].OnClose()
+    def LoadModules(config : Config):
+        if ServerModule.__modulesInited:
+            for mod in ServerModule.__Modules:
+                modSaveFileFolder = ServerModule.__getModSaveFileFolder(config.SaveFileFolder, mod)
+                ServerModule.__Modules[mod].OnLoad(modSaveFileFolder)
 
-    def InitModules(debug : bool):
-        for mod in ServerModule.__Modules:
-            ServerModule.__Modules[mod].OnInit(debug)
+    def CloseModules(config : Config):
+        if ServerModule.__modulesInited:
+            for mod in ServerModule.__Modules:
+                ServerModule.__Modules[mod].OnClose()
+            ServerModule.__modulesInited = False
+
+    def InitModules(config : Config):
+        if not ServerModule.__modulesInited:
+            for mod in ServerModule.__Modules:
+                ServerModule.__Modules[mod].OnInit(config.Debug, config.RootFile)
+            ServerModule.__modulesInited = True
 
 class SystemModule(ServerModule):
     def __init__(self) -> None:
@@ -154,11 +115,11 @@ class SystemModule(ServerModule):
         pass
     def OnClose(self) -> None:
         pass
-    def OnInit(self, debug : bool) -> None:
+    def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:
         if debug:
             self.__onlineHandler.setLevel(logging.DEBUG)
 
-        self.__systemFile = self.RootFile.AddNewChildFile("system")
+        self.__systemFile = rootFile.AddNewChildFile("system")
         self.__systemFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.ListVirtualFiles))
 
         self.__logFile = VirtualFile(self.__systemFile, "logs")
@@ -173,16 +134,12 @@ class SystemModule(ServerModule):
         "set": False,
         "message": None
         }
-        
-    @property
-    def RootFile(self):
-        return self.__rootFile
 
     def ListVirtualFiles(self, file, request):
         #type: (VirtualFile, ServerRequest) -> str
 
-        html = "<!DOCTYPE html><html>"
         head = ""
+
         body = "<h1>Files in " + file.FullPath + "</h1><ul>"
 
         for f in file.GetAllFiles():
@@ -200,7 +157,7 @@ class SystemModule(ServerModule):
         
         body += "</ul>"
 
-        html += "<head>" + head + "</head><body>" + body + "</body></html>"
+        html = "<!DOCTYPE html><html><head>" + head + "</head><body>" + body + "</body></html>"
         return html
 
     def __getLogs(self,file, request):
