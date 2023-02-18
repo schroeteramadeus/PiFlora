@@ -86,28 +86,17 @@ class ServerModule(ABC):
 
 class SystemModule(ServerModule):
     def __init__(self) -> None:
-        super().__init__()
-        #region setup logger
-        root = logging.getLogger()
-        root.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s, %(filename)s:%(lineno)s")
+        if SystemModule.TryGet() == None:
+            super().__init__()
+            #region setup logger
+            root = logging.getLogger()
+            root.setLevel(logging.DEBUG)
+            self.__onlineHandler = VirtualLogger()
+            #TODO set to info
+            self.__onlineHandler.setLevel(logging.DEBUG)
 
-        self.__onlineHandler = VirtualLogger()
-        #TODO set to info
-        self.__onlineHandler.setLevel(logging.DEBUG)
-        self.__onlineHandler.setFormatter(formatter)
-
-        self.__fileHandler = logging.FileHandler("server.log")
-        #TODO get file from config?
-        self.__fileHandler.setLevel(logging.DEBUG)
-        self.__fileHandler.setFormatter(formatter)
-
-        root.addHandler(self.__onlineHandler)
-        root.addHandler(self.__fileHandler)
-        #endregion setup logger
-        
-        self.__rootFile = VirtualFile(None, "root")
-        self.__rootFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.ListVirtualFiles))
+            root.addHandler(self.__onlineHandler)
+            #endregion setup logger
 
     def OnSave(self, saveFolderPath : str) -> None:
         pass
@@ -118,6 +107,7 @@ class SystemModule(ServerModule):
     def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:
         if debug:
             self.__onlineHandler.setLevel(logging.DEBUG)
+        rootFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE, self.ListVirtualFiles))
 
         self.__systemFile = rootFile.AddNewChildFile("system")
         self.__systemFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.ListVirtualFiles))
@@ -214,7 +204,6 @@ class SystemModule(ServerModule):
                 }
 
         return json.dumps(data)
-
 
 __systemMod = SystemModule()
 

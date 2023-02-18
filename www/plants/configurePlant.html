@@ -8,16 +8,52 @@
         <meta http-Equiv="Cache-Control" Content="no-cache" />
         <meta http-Equiv="Pragma" Content="no-cache" />
         <meta http-Equiv="Expires" Content="0" />
+        <script>
+            PLANTIDPARAM = 'plant';
+            PARAMS = getURIParameters();
+            CREATENEW = !PARAMS.has(PLANTIDPARAM);
+            OLDPLANTNAME = PARAMS.get(PLANTIDPARAM);
+
+            //python types
+            PUMPTYPE = GPIOPUMPTYPE;
+            SENSORTYPE = MIFLORAPLANTSENSORTYPE;
+
+            function fadeOutStatus(){
+                var status = document.getElementById('status');
+                //TODO set class to not fade out
+                status.style.display = 'none';
+                status.dataset.pollStatus = POLLSTATUSPOLLING;
+                status.innerHTML = 'Processing...';
+            }
+            function showStatus(){
+                var status = document.getElementById('status');
+                status.style.display = ''
+            }
+            function setStatusSuccess(){
+                var status = document.getElementById('status');
+                status.dataset.pollStatus = POLLSTATUSACTIVE;
+                status.innerHTML = 'Success';
+                
+                excecuteOnceAfter(fadeOutStatus, 1000)
+            }
+            function setStatusFailed(){
+                var status = document.getElementById('status');
+                status.dataset.pollStatus = POLLSTATUSINACTIVE;
+                status.innerHTML = 'Failed';
+
+                excecuteOnceAfter(fadeOutStatus, 1000)
+            }
+            function showTable(){
+                var table = document.getElementById('dataTable');
+                table.style.display = '';
+            }
+            function hideTable(){
+                var table = document.getElementById('dataTable');
+                table.style.display = 'none';
+            }
+        </script>
     </head>
     <body onload="
-                PLANTIDPARAM = 'plant';
-                PARAMS = getURIParameters();
-                CREATENEW = !PARAMS.has(PLANTIDPARAM);
-
-                //python types
-                PUMPTYPE = GPIOPUMPTYPE;
-                SENSORTYPE = MIFLORAPLANTSENSORTYPE;
-
                 var sensorTemplateRow = document.getElementById('sensorOption');
                 document.getElementById('miFloraPlantSensors').innerHTML = '';
                 
@@ -28,6 +64,7 @@
 
                 if(CREATENEW){
                     document.getElementById('submitButton').value = 'Create';
+                    showTable()
                 }else{
                     document.getElementById('submitButton').value = 'Change';
                 }
@@ -35,15 +72,14 @@
 
                 function loadPlant(){
                     if(!CREATENEW){
+                        showStatus()
                         var table = document.getElementById('dataTable');
                         var status = document.getElementById('status');
-                        var display = table.style.display;
 
                         status.style.display = 'none';
-                        table.style.display = 'none';
-                        console.log('Loading plant: ' + PARAMS.get(PLANTIDPARAM));
+                        console.log('Loading plant: ' + OLDPLANTNAME);
 
-                        updatePlant(document.getElementById('dataTable'), PARAMS.get(PLANTIDPARAM), 'plant', (success)=>{
+                        updatePlant(table, OLDPLANTNAME, 'plant', (success)=>{
                             if(success){
                                 var sensorTypesSelect = document.getElementById('sensorTypes');
                                 var pumpTypesSelect = document.getElementById('pumpTypes');
@@ -70,26 +106,17 @@
                                 }
                             }
                             if(!success){
-                                console.log('Could not load plant data for: ' + PARAMS.get(PLANTIDPARAM));
-                                status.dataset.pollStatus = 'inactive';
-                                status.innerHTML = 'Failed';
+                                console.log('Could not load plant data for: ' + OLDPLANTNAME);
+                                setStatusFailed()
+                                excecuteOnceAfter(window.location = 'setup.html', 1000)
                             }
                             else{
-                                status.dataset.pollStatus = 'active';
-                                status.innerHTML = 'Success';
-                                table.style.display = display;
+                                setStatusSuccess()
+                                showTable()
                             }
-                            status.style.display = ''
-                            function fadeOut(){
-                                //TODO set class to not fade out
-                                status.style.display = 'none';
-                            }
-                            //TODO set class to fade out
-                            excecuteOnceAfter(fadeOut, 1000);
                         })
                     }
                 }
-
                 SENSORSUPDATED = false;
                 GPIOSUPDATED = false;
                 //TODO eliminate race condition, use jquery $.when(updateSensors,updateGPIOs).done(loadPlant())
@@ -107,6 +134,8 @@
                     SENSORSUPDATED = true;
                     if(SENSORSUPDATED && GPIOSUPDATED){
                         loadPlant();
+                        SENSORSUPDATED = false;
+                        GPIOSUPDATED = false;
                     }
                 }, true);
                 
@@ -124,10 +153,10 @@
                     GPIOSUPDATED = true;
                     if(SENSORSUPDATED && GPIOSUPDATED){
                         loadPlant(); 
+                        SENSORSUPDATED = false;
+                        GPIOSUPDATED = false;
                     }
                 }, true);
-                
-                
     ">
         <h1>New Plant</h1>
         <div style="display:hidden;">
@@ -138,7 +167,7 @@
             <span id="oldPumpType" style="display:hidden;" data-poll="plant_pump_type" data-poll-populate="innerHTML"></span>   
         </div>
 
-        <table id="dataTable" class="dataTable">
+        <table id="dataTable" class="dataTable fullTable" style="display: none;">
             <tbody>
                 <tr>
                     <td>Name</td>
@@ -201,45 +230,36 @@
         <div id="status" style="display:none;" data-poll-status="polling">Processing...</div>
 
         <input id="submitButton" type="button" value="Create" onclick="
-            //var table = document.getElementById('dataTable');
-            var status = document.getElementById('status');
+            var table = document.getElementById('dataTable');
             //table.style.display = 'none';
-            
-            function fadeOut(){
-                //TODO only excecute when the button is not pressed again
-                //TODO set class to not fade out
-                status.style.display = 'none';
-            }
-            if(CREATENEW){
-                createPlant(document.getElementById('dataTable'), (success)=>{
-                    if(success){
-                        status.innerHTML = 'Success';
-                        status.dataset.pollStatus = 'active';
-                    }else{
-                        status.innerHTML = 'Failed';
-                        status.dataset.pollStatus = 'inactive';
-                    }
-                    status.style.display = 'block';
-                    //TODO set class to fade out
-                    excecuteOnceAfter(fadeOut, 1000);
-                });
+            hideTable()
 
-            }else{
-                var newName = document.getElementById('name').value
-                changePlant(document.getElementById('dataTable'), PARAMS.get(PLANTIDPARAM), (success)=>{
+            //TODO only excecute when the button is not pressed again
+            var newName = document.getElementById('name').value
+            if(CREATENEW){
+                createPlant(table, (success)=>{
                     if(success){
-                        status.innerHTML = 'Success';
-                        status.dataset.pollStatus = 'active';
-                        window.location = 'configurePlant.html?' + PLANTIDPARAM + '=' + newName;
+                        setStatusSuccess()
+                        excecuteOnceAfter(window.location = 'configurePlant.html', 1000)
                     }else{
-                        status.innerHTML = 'Failed';
-                        status.dataset.pollStatus = 'inactive';
-                        //TODO set class to fade out
-                        excecuteOnceAfter(fadeOut, 1000);         
-                    }         
-                    status.style.display = 'block';
+                        setStatusFailed()
+                        showTable()
+                    }
+                });
+            }else{
+                changePlant(table, OLDPLANTNAME, (success)=>{
+                    if(success){
+                        setStatusSuccess()
+                        //OLDPLANTNAME = newName
+                        excecuteOnceAfter(window.location = 'configurePlant.html?' + PLANTIDPARAM + '=' + newName, 1000)
+                        //window.location = 'configurePlant.html?' + PLANTIDPARAM + '=' + newName;
+                    }else{
+                        setStatusFailed()
+                        showTable()
+                    }
                 });
             }
+            showStatus()
         "/>
     </body>
 </html>

@@ -1,6 +1,5 @@
 #custom
-Config/SSL
-Config/Save
+config
 *.log
 #visual studio code cache
 .vs

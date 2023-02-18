@@ -17,7 +17,7 @@ class HybridServer(HTTPServer):
         self.__id = HybridServer.__id
         HybridServer.__id += 1
         self.__rootFile = virtualRootFile
-        self.__serviceableFileExtensions = serviceableFileExtensions
+        self.__serviceableFileExtensions = tuple(serviceableFileExtensions)
         self.__runningDirectory = runningDirectory
         self.__standardPath = standardpath
         self.__logger = logger.getChild("HybridServer" + str(self.__id))
@@ -47,32 +47,15 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         #get get-parameters
         parsedURL = urlparse(self.path)
-
-        uri = self.path.lstrip("/").split("?")
-
-        relativePath = uri[0].replace("../", "")
-        getParams = None
-        if len(uri) > 1:
-            getParams = uri[1]
-
         self.path = parsedURL.path
-        server = None
         if isinstance(self.server,HybridServer):
-            server = self.server #type: HybridServer
-            server.__class__ = HybridServer
-            if relativePath == "":
-                relativePath = server.RunningDirectory + "/" + server.StandardPath
-            else:
-                relativePath = server.RunningDirectory + "/" + relativePath
-
-            #print(relativePath)
-            if os.path.exists(relativePath) and os.path.isfile(relativePath) and relativePath.endswith(server.ServiceableFileExtensions):
-                #print("Serving file: " + os.getcwd() + "/" + relativePath)
-                self.path = relativePath
-                
+            absoluteSystemPath = HybridServerRequestHandler.__getAbsoluteSystemPath(self.server.RunningDirectory, self.path, self.server.StandardPath)
+            if os.path.exists(absoluteSystemPath) and os.path.isfile(absoluteSystemPath) and absoluteSystemPath.endswith(self.server.ServiceableFileExtensions):
+                self.path = absoluteSystemPath
                 HybridServerRequestHandler.ServeStaticFile(self, 200)
             else:
-                HybridServerRequestHandler.ServeVirtualFile(self, server.RootFile.GetFileOrNone(self.path), METHOD_GET, ServerRequest(self.headers, parse_qs(parsedURL.query), ""))
+                #print(self.server.RootFile.GetFileOrNone(self.path))
+                HybridServerRequestHandler.ServeVirtualFile(handler=self, virtualFile=self.server.RootFile.GetFileOrNone(self.path), method=METHOD_GET, request=ServerRequest(self.headers, parse_qs(parsedURL.query), ""))
         else:
             self.SendInternalError(self)
             #raise TypeError("HybridServerRequestHandler needs a HybridServer to be run on")
@@ -85,13 +68,8 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
         #print(self.headers.is_multipart())
 
         self.path = parsedURL.path
-        server = None
         if isinstance(self.server,HybridServer):
-            server = self.server #type: HybridServer
-            server.__class__ = HybridServer
-
-            file = server.RootFile.GetFileOrNone(self.path)
-            HybridServerRequestHandler.ServeVirtualFile(self, server.RootFile.GetFileOrNone(self.path), METHOD_POST, ServerRequest(self.headers, parse_qs(parsedURL.query), self.rfile.read(int(self.headers['Content-Length']))))
+            HybridServerRequestHandler.ServeVirtualFile(handler=self, virtualFile=self.server.RootFile.GetFileOrNone(self.path), method=METHOD_POST, request=ServerRequest(self.headers, parse_qs(parsedURL.query), self.rfile.read(int(self.headers['Content-Length']))))
         else:
             self.SendInternalError(self)
 
@@ -181,6 +159,13 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
         else:
             handler.SendFileNotFound(handler)
        
+    def __getAbsoluteSystemPath(runningDir : str, relativePath : str, standardPath : str):
+        absolutePath = runningDir + "/" + relativePath.replace("../", "")
+        if os.path.isdir(absolutePath):
+            absolutePath += "/" + standardPath
+
+        return absolutePath
+
     def log_message(self, format, *args):
         if isinstance(self.server,HybridServer):
             server = self.server #type: HybridServer

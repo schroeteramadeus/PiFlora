@@ -92,7 +92,7 @@ class VirtualFile:
             self.__fileHandlers = {} #type: dict[_VirtualFileMethod, VirtualFileHandler]
             
             if self.__parent != None:
-                if not self.__parent.FileExists(self.__name):
+                if not self.__name in self.__parent.__childs:
                     self.__parent.__childs[self.__name] = self
                 else:
                     raise ValueError(self.__parent.FullPath + "/" + self.__name + " already exists")
@@ -120,7 +120,7 @@ class VirtualFile:
 
     def GetFile(self, path):
         #type: (str) -> VirtualFile
-        path = path.rstrip("/").lower()
+        path = path.replace("\\", "/").rstrip("/").lower()
         names = path.split("/")
 
         if path.startswith("/"):
@@ -128,29 +128,36 @@ class VirtualFile:
             if self.Parent != None:
                 return self.Parent.GetFile(path)
             else:
-                if self.Name == names[1]: #starts with ""
-                    if len(names) > 3:
-                        if names[2] in self.__childs:
-                            return self.__childs[names[2]].GetFile("/".join(names[3:]))
-                        else:
-                            raise ValueError("File " + self.FullPath + path + " does not exist")
-                    elif len(names) > 2:
-                        if names[2] in self.__childs:
-                            return self.__childs[names[2]]
-                        else:
-                            raise ValueError("File " + self.FullPath + path + " does not exist")
+                if len(names) > 2:
+                    if names[1] == self.Name:
+                        return self.GetFile("/".join(names[2:]))
                     else:
-                        return self
+                        raise ValueError("File " + path + " does not exist, root was: /" + self.Name)
+                else:
+                    return self
+                # if self.Name == names[1]: #starts with ""
+                #     if len(names) > 3:
+                #         if names[2] in self.__childs:
+                #             return self.__childs[names[2]].GetFile("/".join(names[3:]))
+                #         else:
+                #             raise ValueError("File " + self.FullPath + path + " does not exist")
+                #     elif len(names) > 2:
+                #         if names[2] in self.__childs:
+                #             return self.__childs[names[2]]
+                #         else:
+                #             raise ValueError("File " + self.FullPath + path + " does not exist")
+                #     else:
+                #         return self
 
         else:
-            if names[0] != "":
+            if len(names) > 0 and names[0] != "":
                 if names[0] in self.__childs:
                     if len(names) > 1:
                         return self.__childs[names[0]].GetFile("/".join(names[1:]))
                     else:
                         return self.__childs[names[0]]
                 else:
-                    raise ValueError("File " + self.FullPath + path + " does not exist")
+                    raise ValueError("File " + self.FullPath + "/" + path + " does not exist")
             else:
                 raise ValueError("Path not vaid")     
 
@@ -159,6 +166,7 @@ class VirtualFile:
         try:
             return self.GetFile(path)
         except(ValueError):
+            #TODO log error
             return None
 
     def GetAllFiles(self):

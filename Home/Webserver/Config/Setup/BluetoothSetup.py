@@ -8,9 +8,10 @@ from ....Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor as 
 
 class BluetoothModule(ServerModule):
     def __init__(self) -> None:
-        super().__init__()
-        self.__bluetoothManager = BluetoothManager
-        self.__systemModule = None #type: SystemModule
+        if BluetoothModule.TryGet() == None:
+            super().__init__()
+            self.__bluetoothManager = BluetoothManager
+            self.__systemModule = None #type: SystemModule
 
     @property
     def BluetoothManager(self) -> Type[BluetoothManager]:

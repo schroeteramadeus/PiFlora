@@ -1,4 +1,5 @@
 import logging
+import traceback
 from Home.Utils.ArgumentParser import Argument, ArgumentParser, Switch 
 from Home.Webserver.Config.Config import Config
 import os
@@ -7,23 +8,28 @@ import sys
 from typing import Callable
 #from ConsoleFilter import ConsoleFilter
 import socket
-from Home.Webserver.VirtualFile import VirtualFile
+from Home.Webserver.VirtualFile import METHOD_GET, TYPE_HTMLFILE, VirtualFile, VirtualFileHandler
 
 if __name__ == "__main__":
+    configFolder = os.getcwd() + "/config"
+    if not os.path.exists(configFolder):
+        os.mkdir(configFolder)
 
-    config = Config(configFile = os.getcwd() + "/config/server.conf",
+    config = Config(configFile = configFolder + "/server.conf",
                     standardPath = "index.html",
                     hostAddress = "127.0.0.1",
                     serverPort = 8080,
                     title = "Home",
-                    serveableFileExtensions = (".html", ".htm", ".ico", ".png", ".svg", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min", ".json", ".map"),
-                    rootFile = VirtualFile(None, "root"),
+                    serveableFileExtensions = [".html", ".htm", ".ico", ".png", ".svg", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min", ".json", ".map"],
+                    rootFileName = "root",
                     tslMinimumVersion = ssl.TLSVersion.TLSv1_3,
                     debug = bool,
                     wwwFolder = os.getcwd() + "/www",
-                    saveFolder = os.getcwd() + "/config/save",
-                    sslKeyPath = os.getcwd() + "/config/ssl/cert.key",
-                    sslCertPath = os.getcwd() + "/config/ssl/cert.csr",
+                    saveFolder = configFolder + "/save",
+                    logFilePath = configFolder + "/server.log",
+                    sslPath = configFolder + "/ssl",
+                    sslKeyFile = "cert.key",
+                    sslCertFile = "cert.csr",
                  )
 
     argParser = ArgumentParser()
@@ -50,20 +56,24 @@ if __name__ == "__main__":
     if sslCert != None:
         config.SSLCertPath = str(sslCert).rstrip("/")
 
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+    _root = logging.getLogger()
+    _root.setLevel(logging.DEBUG)
+    _fileFormatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s, %(filename)s:%(lineno)s")
+    _consoleFormatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
 
     _consoleHandler = logging.StreamHandler(sys.stdout)
-    _consoleHandler.setFormatter(formatter)
+    _consoleHandler.setFormatter(_consoleFormatter)
     #_consoleHandler.addFilter(ConsoleFilter())
     if config.Debug:
         _consoleHandler.setLevel(logging.DEBUG)
     else:
         _consoleHandler.setLevel(logging.WARNING)
         
-    root.addHandler(_consoleHandler)
-
+    _fileHandler = logging.FileHandler(config.LogFilePath)
+    _fileHandler.setLevel(logging.DEBUG)
+    _fileHandler.setFormatter(_fileFormatter)
+    _root.addHandler(_consoleHandler)
+    _root.addHandler(_fileHandler)
 
 from Home.Webserver.Server import HybridServer, HybridServerRequestHandler
 import Home.Webserver.SSLCreator as SSLCreator
@@ -97,6 +107,8 @@ def main(config : Config, onServerCloseFunc : Callable[[], None]):
             onServerCloseFunc()
             webServer.server_close()
             print("Server stopped.")
+
+    return continueStart
 
 def AskForYesOrNo(message: str) -> bool:
     decision = True
@@ -160,11 +172,16 @@ def CreateSSLCertInteractive(config : Config) -> bool:
     #TODO interactive
     created = False
     try:
+        if not os.path.exists(config.SSLPath):
+            os.makedirs(config.SSLPath)
         created = SSLCreator.Create(keyFile = config.SSLKeyPath, certFile = config.SSLCertPath)
-        print("New certificate: " + config.SSLCertPath)
-        print("New private key: " + config.SSLKeyPath)
+        if created:
+            print("New certificate: " + config.SSLCertPath)
+            print("New private key: " + config.SSLKeyPath)
     except Exception as e:
         print("Error while creating new certificates")
+        traceback.print_exc()
+        #print(sys.exc_info()[2])
         print(e)
         created = False
 
@@ -183,10 +200,11 @@ if __name__ == "__main__":
     #Load(config, Setup)
 
     #TODO set up saving thread
-    main(config=config, onServerCloseFunc=lambda : __onServerClose(config))
-    #if no exception happens (except KeyboardInterrupt): save
-    if not config.Debug:
+    if main(config=config, onServerCloseFunc=lambda : __onServerClose(config)) and not config.Debug:
+        #after server closed, if no exception happens (except KeyboardInterrupt) and server was started: save
         print("Saving data...")
+        if not os.path.exists(config.SaveFileFolder):
+            os.makedirs(config.SaveFileFolder)
         Setup.ServerModule.SaveModules(config)
-        #Save(config, Setup)
+        config.Save()
 

@@ -10,11 +10,16 @@ class VirtualLogger(logging.Handler):
         self.__maximumRecords = maximumRecords #type: int
         self.__records = [] #type: list[logging.LogRecord]
         self.__recordsLock = threading.Lock() #type : threading.Lock
+        self.formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s, %(filename)s:%(lineno)s")
+
+    def setFormatter(self, fmt: logging.Formatter | None) -> None:
+        raise AttributeError("Cannot set custom formatter, Fetch() will always return a dict")
 
     def emit(self, record):
         with self.__recordsLock:
             if len(self.__records) >= self.__maximumRecords:
                 self.__records.pop()
+            self.format(record) #needed, so that asctime and other vars will be set
             self.__records.append(record)
 
     def Fetch(self, minimumLevel: int = 0, filter:str = "") -> list[dict[str,str | int]]:

@@ -61,21 +61,27 @@ def Create(
 
     try:
         certF = open(certFile, "wt")
-        certF.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8"))
-    except Exception:
+        try:
+            certF.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8"))
+        except:
+            error = True
+        finally:
+            certF.close()
+    except:
         error = True
-    finally:
-        certF.close()
 
     try:
         keyF = open(keyFile, "wt")
-        if cipher != None and cipher.strip() != "":
-            keyF.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode("utf-8"))
-        else:
-            keyF.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k, cipher=cipher).decode("utf-8"))
-    except Exception:
+        try:
+            if cipher != None and cipher.strip() != "":
+                keyF.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode("utf-8"))
+            else:
+                keyF.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k, cipher=cipher).decode("utf-8"))
+        except:
+            error = True
+        finally:
+            keyF.close()
+    except:
         error = True
-    finally:
-        keyF.close()
 
     return not error

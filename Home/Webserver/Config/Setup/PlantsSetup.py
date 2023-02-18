@@ -18,12 +18,13 @@ from ....Utils.ValueSpan import ValueSpan
 
 class PlantModule(ServerModule):
     def __init__(self) -> None:
-        super().__init__()
-        self.__plantManager = None #type: PlantManager
-        self.__systemModule = None #type: SystemModule
-        self.__bluetoothModule = None #type: BluetoothModule
-        self.__gpioModule = None #type: GPIOModule
-        self.__plantsSaveFile = "plants.json"
+        if PlantModule.TryGet() == None:
+            super().__init__()
+            self.__plantManager = None #type: PlantManager
+            self.__systemModule = None #type: SystemModule
+            self.__bluetoothModule = None #type: BluetoothModule
+            self.__gpioModule = None #type: GPIOModule
+            self.__plantsSaveFile = "plants.json"
 
     def OnSave(self, saveFolderPath : str) -> None:
         #TODO save Plantmanager metadata

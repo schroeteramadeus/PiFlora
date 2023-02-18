@@ -8,9 +8,10 @@ from ....Hardware.Sensors.Plant.MiFloraPlantSensor import MiFloraPlantSensor as 
 
 class GPIOModule(ServerModule):
     def __init__(self) -> None:
-        super().__init__()
-        self.__gpioManager = GPIOManager
-        self.__systemModule = None #type: SystemModule
+        if GPIOModule.TryGet() == None:
+            super().__init__()
+            self.__gpioManager = GPIOManager
+            self.__systemModule = None #type: SystemModule
 
     def OnSave(self, saveFolderPath : str) -> None:
         pass
