@@ -18,6 +18,8 @@ WARNING: Debug mode will trigger on ALL other systems for bluetooth manager and 
 
 - install (via pip) miflora
 
+- install npm
+
 - (optionally) install (via pip) pyOpenSSL (though you can still run on http or put your custom certificate and key in the designated folder)
 
 - make sure bluetooth is available (especially the command "sudo hcitool lescan")
@@ -56,6 +58,8 @@ TODO add image of setup
 - python3 startWebserver.py
 
 - for testing use the -debug flag (no tsl and save files, modules will be run in debug mode), but keep in mind that if not set some functionalities may still run on debug mode (e.g. bluetooth on a non-linux os)
+
+- use the -rebuild flag, if [npm run build] should be excecuted, note that if the vue/dist directory does not exists, it will be build anyways
 
 - optionally for startWebserver.py you can also define  -www [HTML folder path], -save [save folder path], -sslCert [ssl certificate path], -sslKey [ssl private key path]
 

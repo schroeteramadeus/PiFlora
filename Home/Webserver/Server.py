@@ -44,6 +44,12 @@ class HybridServer(HTTPServer):
         return self.__runningDirectory
 
 class HybridServerRequestHandler(SimpleHTTPRequestHandler):
+
+    def __init__(self, request, client_address, server, *, directory: str | None = None) -> None:
+        super().__init__(request, client_address, server, directory=directory)
+        #so that guess_type() works correctly
+        self.extensions_map[".js"] = "text/javascript"
+
     def do_GET(self):
         #get get-parameters
         parsedURL = urlparse(self.path)

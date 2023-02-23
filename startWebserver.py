@@ -10,6 +10,7 @@ from typing import Callable
 import socket
 from Home.Webserver.VirtualFile import METHOD_GET, TYPE_HTMLFILE, VirtualFile, VirtualFileHandler
 
+#TODO compile vue
 if __name__ == "__main__":
     configFolder = os.getcwd() + "/config"
     if not os.path.exists(configFolder):
@@ -24,7 +25,7 @@ if __name__ == "__main__":
                     rootFileName = "root",
                     tslMinimumVersion = ssl.TLSVersion.TLSv1_3,
                     debug = bool,
-                    wwwFolder = os.getcwd() + "/www",
+                    wwwFolder = os.getcwd() + "/vue/dist",
                     saveFolder = configFolder + "/save",
                     logFilePath = configFolder + "/server.log",
                     sslPath = configFolder + "/ssl",
@@ -37,6 +38,7 @@ if __name__ == "__main__":
     argParser.addArgument(Argument("save", str))
     argParser.addArgument(Argument("sslKey", str))
     argParser.addArgument(Argument("sslCert", str))
+    argParser.addArgument(Argument("rebuild", str))#TODO force new build of vue, do anyway if vue/dist does not exist
     argParser.addSwitch(Switch("debug"))
 
     argParser.parseArguments(sys.argv[1:])

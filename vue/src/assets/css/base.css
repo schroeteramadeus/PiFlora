@@ -1,0 +1,40 @@
+:root{
+  --poll-status-polling:"polling";
+  --poll-status-active:"active";
+  --poll-status-inactive:"inactive";
+  --poll-status-debug:"debug";
+  --poll-status-error:"error";
+
+  --text-color-light: rgb(200, 200, 200);
+  --text-color-medium: rgb(150, 150, 150);
+  --text-color-dark: rgb(100, 100, 100);
+
+  --menu-width: 100px;
+  --status-icon-size: 20px;
+  --title-heigth: 30px;
+  --button-height: 30px;
+  --button-width: 100px;
+
+  --color-pallette-darkest:rgb(20, 20, 20);
+  --color-pallette-darker:rgb(30, 30, 30);
+  --color-pallette-dark:rgb(40, 40, 40);
+  --color-pallette-medium-dark:rgb(50, 50, 50);
+  --color-pallette-medium:rgb(60, 60, 60);
+  --color-pallette-light:rgb(70, 70, 70);
+  --color-pallette-lighter:rgb(80, 80, 80);
+  --color-pallette-lightest:rgb(90, 90, 90);
+
+  --color-pallette-error:rgb(200, 0, 0);
+  --color-pallette-inactive:rgb(90, 0, 0);
+  --color-pallette-active:rgb(0, 90, 0);
+  --color-pallette-debug:rgb(100, 100, 0);
+  --color-pallette-polling:rgb(80, 80, 80);
+
+  --color-pallette-positive: rgb(0, 70, 0);
+  --color-pallette-negative: rgb(130, 0, 0);
+
+  --color-image-active-debug:linear-gradient(to right, var(--color-pallette-active) 40%, var(--color-pallette-debug) 60%);
+  --color-image-inactive-debug:linear-gradient(to right, var(--color-pallette-inactive) 40%, var(--color-pallette-debug) 60%);
+
+  --standard-box-shadow:0 0px 5px rgba(0,0,0,.9);
+}
