@@ -13,7 +13,6 @@ const configStore = useConfigStore();
     <ModuleMenu title="Plantmanager">
         <template v-slot:item>
             <!--TODO save router info on click and load after new menu button click-->
-            <MenuItem url="/">Menu</MenuItem>
             <MenuItem url="/plantmanager/plants">Plant Setup</MenuItem>
             <MenuItem url="/plantmanager/sensors">Sensor Setup</MenuItem>
         </template>

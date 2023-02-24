@@ -12,7 +12,7 @@ let props = defineProps({
 </script>
 
 <template>
-    <li class="center">
+    <li class="max-width center">
         <RouterLink :to=url>
             <slot name="default"></slot>
         </RouterLink>
@@ -20,6 +20,23 @@ let props = defineProps({
 </template>
 
 <style scoped>
+@import url("@/assets/css/base.css");
+  li{
+      height: var(--button-height);
+      border-bottom: 1px solid var(--color-pallette-darker);
+      display: block;
+  }
+  li:first-child{
+    border-top: 1px solid var(--color-pallette-darker);
+  }
+  li:hover{
+      background-color: var(--color-pallette-dark);
+      cursor: pointer;
+  }
+  li:active{
+      background-color: var(--color-pallette-medium);
+  }
+
   a {
     width: 100%;
     height: 100%;

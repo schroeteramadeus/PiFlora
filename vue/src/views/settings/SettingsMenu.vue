@@ -10,10 +10,9 @@ const configStore = useConfigStore();
 </script>
 
 <template>
-    <ModuleMenu title="Plantmanager">
+    <ModuleMenu title="Settings">
         <template v-slot:item>
             <!--TODO save router info on click and load after new menu button click-->
-            <MenuItem url="/">Menu</MenuItem>
             <MenuItem url="/settings/server/log">Server Logs</MenuItem>
             <MenuItem url="/settings/client/log">Client Logs</MenuItem>
         </template>

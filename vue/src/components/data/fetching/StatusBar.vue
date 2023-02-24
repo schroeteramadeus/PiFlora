@@ -50,3 +50,9 @@ onMounted(() => {
     {{pollText}}
   </span>
 </template>
+
+<style scoped>
+span {
+    display: block;
+}
+</style>

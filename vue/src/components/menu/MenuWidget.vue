@@ -26,7 +26,7 @@ let props = defineProps({
 
 <template>
     <li>
-      <table class="statusTable">
+      <table class="status-table">
         <tbody>
           <tr>
             <td>
@@ -45,5 +45,25 @@ let props = defineProps({
 </template>
 
 <style scoped>
+.status-table {
+    margin: 5px;
+}
+.status-table td:has(> i) {
+    width: var(--status-icon-size);
+    height: var(--status-icon-size);
+    font-size: calc(var(--status-icon-size) * 0.9);
+}
+.status-table td:has(> *[data-poll-status]) {
+    width: calc(var(--menu-width) - var(--status-icon-size));
+    height: var(--status-icon-size);
+    padding-left: 5px;
+}
+.status-table td > * {
+    width: 100%;
+    height: var(--status-icon-size);
+}
+.status-table .tooltip {
+    transform: translate(0%, calc(-100% + var(--status-icon-size)));
+}
   
 </style>
