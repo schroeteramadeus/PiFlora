@@ -49,7 +49,7 @@ function onStop(){
 
 <template>
   <div>
-    <input type="button" @onclick=onStart value="Start"/>
-    <input type="button" @onclick=onStop value="Stop"/>
+    <input type="button" @click=onStart value="Start"/>
+    <input type="button" @click=onStop value="Stop"/>
   </div>
 </template>

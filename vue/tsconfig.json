@@ -2,6 +2,13 @@
   "extends": "@vue/tsconfig/tsconfig.web.json",
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
   "compilerOptions": {
+    //#region workaround 
+    //https://stackoverflow.com/questions/75449286/how-to-fix-flag-importsnotusedasvalues-is-deprecated-and-will-stop-functionin
+    //https://github.com/vuejs/tsconfig/issues/6
+    "preserveValueImports": false,
+    "importsNotUsedAsValues": "remove",
+    "verbatimModuleSyntax": true,
+    //#endregion workaround
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

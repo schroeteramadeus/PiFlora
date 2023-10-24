@@ -27,7 +27,7 @@ WARNING: Debug mode will trigger on ALL other systems for bluetooth manager and 
 
 ### Example hardware setup (simplest)
 
-- raspberry pi (3)
+- linux pc
 
 - miflora plant sensor
 
@@ -63,11 +63,11 @@ TODO add image of setup
 
 - optionally for startWebserver.py you can also define  -www [HTML folder path], -save [save folder path], -sslCert [ssl certificate path], -sslKey [ssl private key path]
 
-- for a full list of editable configurations (that are run on startup when no parameters are given), feel free to change them in the Config/Config.py file
+- for a full list of editable configurations (that are run on startup when no parameters are given), feel free to change them in the config/server.conf file (will be created on first run)
 
 ### Troubleshooting
 
-- if you are running on https, make sure the certificate is registered on your client
+- if you are running on https, make sure the certificate is registered on your client (trusted)
 
 - if you are not running on localhost (127.0.0.1), make sure your firewall does not block incoming/outgoing requests on the specified port
 

@@ -8,7 +8,6 @@ import logging
 from sys import platform
 
 from ..Utils.WakeableSleep import WakeableSleep
-#"Singleton"
 
 _logger = logging.getLogger(__name__)
 debugMode = False

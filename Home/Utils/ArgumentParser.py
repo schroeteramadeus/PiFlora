@@ -30,7 +30,7 @@ class ArgumentParser:
     __arguments = [] #type: list[Argument]
     __switches = [] #type: list[Switch]
 
-    __parsed = {} #type: dict[str, str | bool]
+    __parsed = {} #type: dict[str, str | bool | None]
 
     def addSwitch(self, switch:Switch):
         self.__switches.append(switch)

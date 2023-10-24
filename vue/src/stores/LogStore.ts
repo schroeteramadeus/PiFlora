@@ -52,6 +52,8 @@ export const useLogStore = defineStore("log", () => {
     }
 
     return {
+        log,
+        
         lastError,
         lastErrorTime,
         lastErrorAction,

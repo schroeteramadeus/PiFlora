@@ -56,10 +56,11 @@ onMounted(() => {
           </RouterLink>
         </li>
         <li>
-          <RouterLink to="/root">
+          <!--RouterLink will not actually load the data sent by the server directly-->
+          <a href="/root">
             <i class="fa-solid fa-bug-slash"></i>
             <div class="tooltip no-edge">Digital Repository (DEBUG)</div>
-          </RouterLink>
+          </a>
         </li>
       </ul>
       </nav>

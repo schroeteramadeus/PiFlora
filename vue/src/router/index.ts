@@ -42,6 +42,11 @@ const router = createRouter({
       component: () => import('@/views/plants/PlantSetup.vue')
     },
     {
+      path: '/plantmanager/plants/configure',
+      name: 'plantmanager_plants_configure',
+      component: () => import('@/views/plants/ConfigurePlant.vue')
+    },
+    {
       path: '/plantmanager/sensors',
       name: 'plantmanager_sensors',
       component: () => import('@/views/plants/SensorSetup.vue')

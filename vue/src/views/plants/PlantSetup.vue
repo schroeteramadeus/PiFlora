@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import StatusBar from '@/components/data/fetching/StatusBar.vue'
-import { useConfigStore } from '@/stores/ConfigStore';
 import PlantMenu from './PlantMenu.vue'
+import router from '@/router/index'
+import { useLogStore } from '@/stores/LogStore';
+import {eventTargetToElement} from '@/assets/js/lib'
+import { useConfigStore } from '@/stores/ConfigStore';
 
 const configStore = useConfigStore();
+const logStore = useLogStore();
+const config = useConfigStore();
+const PLANTIDPARAM = config.plantManagerConfig.plantIdParameter;
+
+
 </script>
 
 <template>
@@ -15,11 +23,11 @@ const configStore = useConfigStore();
             <input type="button" onclick="startPlantmanager(document.getElementById('plantmanagerStatus'))" value="Start"/>
             <input type="button" onclick="stopPlantmanager(document.getElementById('plantmanagerStatus'))" value="Stop"/>
         </div>
-        <input type="button" onclick="window.location='configurePlant.html'" value="New plant"/>
+        <input type="button" @click="event => router.push('/plantmanager/plants/configure')" value="New plant"/>
         <br />
 
         <h1>Current setup</h1>
-
+        
         <table id="setupTable" class="maxWidth dataTable">
             <thead class="maxWidth">
                 <tr>
@@ -50,8 +58,8 @@ const configStore = useConfigStore();
                         ERROR
                     </td>
                     <td>
-                        <a onclick="window.location = 'configurePlant.html?plant=' + this.parentElement.parentElement.querySelector('[data-poll=data_configuration_name]').innerHTML;"><i class="fa-solid fa-gear"></i></a>
-                    </td>
+                        <a @click="event => router.push({path: '/plantmanager/plants/configure', query: {PLANTIDPARAM: eventTargetToElement(event.target)?.parentElement?.parentElement?.querySelector('[data-poll=data_configuration_name]')?.innerHTML}})" ><i class="fa-solid fa-gear"></i></a>
+                        </td>
                     <td>
                         <a id="trashButton" onclick="
                             var el = this;

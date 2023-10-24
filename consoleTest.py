@@ -11,7 +11,6 @@ import time
 import re
 import logging
 import sys
-import ConsoleFilter as CF
 import Home.Hardware.Sensors.Water.AlwaysActiveWaterSensor as AAWS
 
 plantManager = None #type:PM.PlantManager
@@ -65,7 +64,6 @@ try:
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
-    handler.addFilter(CF.ConsoleFilter())
 
     root.addHandler(handler)
 

@@ -8,14 +8,18 @@ import sys
 from typing import Callable
 #from ConsoleFilter import ConsoleFilter
 import socket
-from Home.Webserver.VirtualFile import METHOD_GET, TYPE_HTMLFILE, VirtualFile, VirtualFileHandler
+from VueCompiler import VueCompiler
 
-#TODO compile vue
+#TODO use GraphQL for get/post requests
 if __name__ == "__main__":
+    
+    compiling = False
+    vueFolder = os.getcwd() + "/vue"
     configFolder = os.getcwd() + "/config"
     if not os.path.exists(configFolder):
         os.mkdir(configFolder)
 
+    #this initial config will be overridden by the config file (if existing)
     config = Config(configFile = configFolder + "/server.conf",
                     standardPath = "index.html",
                     hostAddress = "127.0.0.1",
@@ -24,8 +28,9 @@ if __name__ == "__main__":
                     serveableFileExtensions = [".html", ".htm", ".ico", ".png", ".svg", ".jpeg", ".jpg", ".gif", ".tiff", ".ttf", ".woff2", ".js", ".ts", ".css", ".min", ".json", ".map"],
                     rootFileName = "root",
                     tslMinimumVersion = ssl.TLSVersion.TLSv1_3,
-                    debug = bool,
-                    wwwFolder = os.getcwd() + "/vue/dist",
+                    debug = False,
+                    compileFolder = vueFolder,
+                    wwwFolder = vueFolder + "/dist",
                     saveFolder = configFolder + "/save",
                     logFilePath = configFolder + "/server.log",
                     sslPath = configFolder + "/ssl",
@@ -33,12 +38,13 @@ if __name__ == "__main__":
                     sslCertFile = "cert.csr",
                  )
 
+    compiler = VueCompiler(config.CompileFolder)
     argParser = ArgumentParser()
     argParser.addArgument(Argument("www", str))
     argParser.addArgument(Argument("save", str))
     argParser.addArgument(Argument("sslKey", str))
     argParser.addArgument(Argument("sslCert", str))
-    argParser.addArgument(Argument("rebuild", str))#TODO force new build of vue, do anyway if vue/dist does not exist
+    argParser.addSwitch(Switch("rebuild"))
     argParser.addSwitch(Switch("debug"))
 
     argParser.parseArguments(sys.argv[1:])
@@ -77,6 +83,12 @@ if __name__ == "__main__":
     _root.addHandler(_consoleHandler)
     _root.addHandler(_fileHandler)
 
+    if argParser.getParsedValue("rebuild") or not os.path.exists(config.StandardPath):
+        print("Starting (re)compiling procedure...")
+        compiling = True
+        compiler.StartCompile()
+
+#import here for correct logging
 from Home.Webserver.Server import HybridServer, HybridServerRequestHandler
 import Home.Webserver.SSLCreator as SSLCreator
 import Home.Webserver.Config.Setup.Import as Setup
@@ -91,13 +103,14 @@ def main(config : Config, onServerCloseFunc : Callable[[], None]):
     protocol = "http://"
 
     if not config.Debug:
-        print("Activating TLS 1.3...")
+        #TODO show correct tsl Version
+        print("Activating TSL 1.3...")
         if config.TSLMinimumVersion != None:
             if TryActivateSSL(webServer, config):
                 protocol = "https://"
             else:
-                print("Could not activate TLS")
-                continueStart = AskForYesOrNo("Do you want to continue without TLS?")
+                print("Could not activate TSL")
+                continueStart = AskForYesOrNo("Do you want to continue without TSL?")
 
     if continueStart:
         PrintServerEndpoints(config, protocol)
@@ -106,6 +119,7 @@ def main(config : Config, onServerCloseFunc : Callable[[], None]):
         except KeyboardInterrupt:
             pass
         finally:
+            print("Server stopping...")
             onServerCloseFunc()
             webServer.server_close()
             print("Server stopped.")
@@ -171,7 +185,7 @@ def TryActivateSSL(webServer : HybridServer, config : Config) -> bool:
     return activated
     
 def CreateSSLCertInteractive(config : Config) -> bool:
-    #TODO interactive
+    #TODO create with password
     created = False
     try:
         if not os.path.exists(config.SSLPath):
@@ -201,6 +215,20 @@ if __name__ == "__main__":
     Setup.ServerModule.LoadModules(config)
     #Load(config, Setup)
 
+    #TODO handle compile errors?
+    if compiling:
+        compilerOutput = compiler.Wait()
+        compiling = False
+        print("Compile procedure finished:")
+        print()
+        #https://stackoverflow.com/questions/12492810/python-how-can-i-make-the-ansi-escape-codes-to-work-also-in-windows
+        #(probably) changes console mode to 7
+        os.system("")
+        for line in compilerOutput:
+            printline = line.replace("\r\n", "").replace("\n", "")
+            if(printline != ""):
+                print("\t" + printline)
+        print()
     #TODO set up saving thread
     if main(config=config, onServerCloseFunc=lambda : __onServerClose(config)) and not config.Debug:
         #after server closed, if no exception happens (except KeyboardInterrupt) and server was started: save

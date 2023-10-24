@@ -16,9 +16,8 @@ export const useSessionStore = defineStore("session", () => {
 });
 
 function load(variable: Ref<any>, name : string){
-    var value = getCookie(name);
-    if (value != ""){
-        variable.value = JSON.parse(value);
+    if (checkCookie(name)){
+        variable.value = JSON.parse(getCookie(name));
     }
 }
 

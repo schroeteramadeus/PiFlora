@@ -64,7 +64,7 @@ export function populate(body : HTMLTableSectionElement, row : HTMLTableRowEleme
 //data-poll= prefix_dataDictionaryPath #what data to populate with
 //data-poll-populate = data | innerHTML | value //what to populate
 //data-poll-data = ... //will be populated with data if data-poll-populate == data | "" | null
-export function populateDataRow(tableRow : HTMLTableRowElement, dataDictionary: { [x: string]: any; }, prefix: string = ""){
+export function populateDataRow(tableRow : HTMLElement, dataDictionary: { [x: string]: any; }, prefix: string = ""){
     var keys = Object.keys(dataDictionary)
     //console.log(keys);
     for(var x = 0; x < keys.length; x++){
@@ -103,6 +103,8 @@ export function populateDataRow(tableRow : HTMLTableRowElement, dataDictionary: 
 
     //console.log(tableRow);
 }
+
+
 export function getURIParameters() : URLSearchParams{
     return new URLSearchParams(window.location.search);
 }
@@ -141,4 +143,16 @@ export function removeOnceFromArray(array:any[], value : any) : any[]{
         output = array.splice(index, 1);
     }
     return output;
+}
+
+export function urlToName(url : string): string{
+  let name = url
+  name = name.replace("https://", "").replace("http://", "").replace("/","_")
+  return name  
+}
+export function eventTargetToElement(eventTarget : EventTarget | null) : HTMLElement | null {
+    if(eventTarget != null)
+        return eventTarget as HTMLElement;
+    else
+        return null;
 }

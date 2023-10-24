@@ -1,5 +1,6 @@
 import { ref, computed, type Ref } from 'vue'
 import { defineStore } from 'pinia'
+import { urlToName } from '@/assets/js/lib'
 
 export function defineStatusStore(statusURL : string){
   return {
@@ -31,12 +32,6 @@ export class Status{
   }
 }
 
-function urlToName(url : string): string{
-  let name = url
-  name = name.replace("https://", "").replace("http://", "").replace("/","_")
-  return name  
-}
-
 function getOrCreateStore(name : string, statusURL : string){
   return defineStore(name, () => {
     const initialized = ref(false)
@@ -53,18 +48,23 @@ function getOrCreateStore(name : string, statusURL : string){
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4) {
           if(this.status == 200){
-            var response = JSON.parse(this.responseText);
+            try{
+              var response = JSON.parse(this.responseText);
 
-            if(response["error"]["set"] == false){
-              if(response["running"] == true){
-                status.value = new Status(Status.POLLSTATUSINACTIVE, response["debug"], "");
+              if(response["error"]["set"] == false){
+                if(response["running"] == true){
+                  status.value = new Status(Status.POLLSTATUSINACTIVE, response["debug"], "");
+                }
+                else {
+                  status.value = new Status(Status.POLLSTATUSINACTIVE, response["debug"], "");
+                }
               }
-              else {
-                status.value = new Status(Status.POLLSTATUSINACTIVE, response["debug"], "");
+              else{
+                status.value = new Status(Status.POLLSTATUSERROR, false, response["error"]["message"]);
               }
             }
-            else{
-              status.value = new Status(Status.POLLSTATUSERROR, false, response["error"]["message"]);
+            catch{
+              status.value = new Status(Status.POLLSTATUSERROR, false, "No valid JSON");
             }
           }else{
             status.value = new Status(Status.POLLSTATUSERROR, false, "Unknown error");

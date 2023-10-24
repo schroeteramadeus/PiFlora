@@ -5,6 +5,12 @@
   --poll-status-debug:"debug";
   --poll-status-error:"error";
 
+  --font-size-small: 10px;
+  --font-size-medium: 15px;
+  --font-size-big: 20px;
+  
+  --font-size-title: 25px;
+
   --text-color-light: rgb(200, 200, 200);
   --text-color-medium: rgb(150, 150, 150);
   --text-color-dark: rgb(100, 100, 100);

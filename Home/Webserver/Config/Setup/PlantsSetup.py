@@ -27,6 +27,7 @@ class PlantModule(ServerModule):
             self.__plantsSaveFile = "plants.json"
 
     def OnSave(self, saveFolderPath : str) -> None:
+        #TODO use SQL
         #TODO save Plantmanager metadata
         #TODO use valid json
         if not self.__plantManager.IsDebug:

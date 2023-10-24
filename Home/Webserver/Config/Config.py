@@ -49,6 +49,7 @@ class Config:
                     rootFileName : str,
                     tslMinimumVersion : ssl.TLSVersion,
                     debug : bool,
+                    compileFolder : str,
                     wwwFolder : str,
                     saveFolder : str,
                     logFilePath : str,
@@ -68,6 +69,7 @@ class Config:
         self.Debug = debug
 
         ######################### Absolute paths #########################
+        self.CompileFolder = compileFolder
         self.RunningDirectory = wwwFolder
         self.SaveFileFolder = saveFolder
         self.LogFilePath = logFilePath

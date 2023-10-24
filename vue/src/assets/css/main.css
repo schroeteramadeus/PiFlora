@@ -9,6 +9,12 @@ body, html{
     overflow: auto !important;
     background-color: var(--color-pallette-dark);
 }
+* {
+    font-size: var(--font-size-medium);
+}
+h1{
+    font-size: var(--font-size-title);
+}
 li a{
     text-decoration: none;
     color: var(--text-color-light);
