@@ -1,4 +1,7 @@
 # PyPlant
+##Disclaimer
+The code in this repository is currently NOT finished and could contain bugs, unfinished functionalities and generally unexpected behaviour. The project is mainly developed for research purposes and personal usage, as such it will probably not be updated frequently. Feel free to contribute or fork.
+
 ## Overview
 Backend: Webserver implemented via Python HTTPServer, miflora framework, self coded framework for wrapping and other hardware support (e.g gpio pumps)
 
