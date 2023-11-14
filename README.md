@@ -61,13 +61,13 @@ TODO add image of setup
 
 ### Run the web server
 
-- python3 startWebserver.py
+- <code>python3 startWebserver.py</code>
 
-- for testing use the -debug flag (no tsl and save files, modules will be run in debug mode), but keep in mind that if not set some functionalities may still run on debug mode (e.g. bluetooth on a non-linux os)
+- for testing use the <code>-debug</code> flag (no tsl and save files, modules will be run in debug mode), but keep in mind that if not set some functionalities may still run on debug mode (e.g. bluetooth on a non-linux os)
 
-- use the -rebuild flag, if [npm run build] should be excecuted, note that if the vue/dist directory does not exists, it will be build anyways
+- use the <code>-rebuild</code> flag, if <code>npm run build</code> should be excecuted, note that if the vue/dist directory does not exists, it will be build anyways
 
-- optionally for startWebserver.py you can also define  -www [HTML folder path], -save [save folder path], -sslCert [ssl certificate path], -sslKey [ssl private key path]
+- optionally for startWebserver.py you can also define  <code>-www [HTML folder path]</code>, <code>-save [save folder path]</code>, <code>-sslCert [ssl certificate path]</code>, <code>-sslKey [ssl private key path]</code>
 
 - for a full list of editable configurations (that are run on startup when no parameters are given), feel free to change them in the config/server.conf file (will be created on first run)
 
