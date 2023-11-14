@@ -5,7 +5,7 @@ The code in this repository is currently NOT finished and could contain bugs, un
 ## Overview
 Backend: Webserver implemented via Python HTTPServer, miflora framework, self coded framework for wrapping and other hardware support (e.g gpio pumps)
 
-Frontend: Standard HTML, CSS, JS utilizing ajax for data polling and simple configuration of the backend
+Frontend: Vue and standard HTML, CSS, JS utilizing ajax for data polling and simple configuration of the backend
 
 For (normal) use on a linux environment with enabled bluetooth and miflora plant sensors. Preferable is raspberry pi (3) for gpio and additional hardware support.
 
