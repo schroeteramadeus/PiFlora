@@ -5,8 +5,9 @@ import router from '@/router/index'
 import { useLogStore } from '@/stores/LogStore';
 import {eventTargetToElement} from '@/assets/js/lib'
 import { useConfigStore } from '@/stores/ConfigStore';
+import StartStop from '@/components/data/changing/StartStop.vue';
 
-const configStore = useConfigStore();
+
 const logStore = useLogStore();
 const config = useConfigStore();
 const PLANTIDPARAM = config.plantManagerConfig.plantIdParameter;
@@ -16,13 +17,16 @@ const PLANTIDPARAM = config.plantManagerConfig.plantIdParameter;
 
 <template>
     <PlantMenu>
-        <h1 class="center">Plant manager status:<StatusBar :url=configStore.plantManagerConfig.statusUrl /></h1>
+        <h1 class="center">Plant manager status:<StatusBar :url=config.plantManagerConfig.statusUrl /></h1>
         
         <br />
         <div class="center">
+            <StartStop :switch-url=config.plantManagerConfig.switchUrl :status-url=config.plantManagerConfig.statusUrl />
+        </div>
+        <!--div class="center">
             <input type="button" onclick="startPlantmanager(document.getElementById('plantmanagerStatus'))" value="Start"/>
             <input type="button" onclick="stopPlantmanager(document.getElementById('plantmanagerStatus'))" value="Stop"/>
-        </div>
+        </div-->
         <input type="button" @click="event => router.push('/plantmanager/plants/configure')" value="New plant"/>
         <br />
 

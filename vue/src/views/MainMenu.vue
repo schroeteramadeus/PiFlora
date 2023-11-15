@@ -2,6 +2,7 @@
 import { RouterLink } from 'vue-router'
 import {onMounted} from "vue"
 
+/*
 function populateBackground(background : HTMLElement, el : HTMLElement, num : number){
   for(var x = 0; x < num; x++){
     let newNode = el.cloneNode();
@@ -18,8 +19,9 @@ function setupBackground(){
     }
   }
 }
+*/
 onMounted(() => {
-  setupBackground();
+  //setupBackground();
 })
 
 

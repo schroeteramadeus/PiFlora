@@ -23,10 +23,7 @@ let props = defineProps({
 })
 
 let statusStore = defineStatusStore(props.url).get();
-//statusStore.status++
-// with autocompletion ✨
-//statusStore.$patch({ status: statusStore.status + 1 })
-// or using an action instead
+
 let fullPollStatus = computed(() => StatusVars.getFullPollStatus(statusStore.status.pollStatus, statusStore.status.debug))
 let pollText = computed(() => StatusVars.getText(statusStore.status.pollStatus, statusStore.status.debug))
 

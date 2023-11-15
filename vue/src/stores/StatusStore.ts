@@ -53,7 +53,7 @@ function getOrCreateStore(name : string, statusURL : string){
 
               if(response["error"]["set"] == false){
                 if(response["running"] == true){
-                  status.value = new Status(Status.POLLSTATUSINACTIVE, response["debug"], "");
+                  status.value = new Status(Status.POLLSTATUSACTIVE, response["debug"], "");
                 }
                 else {
                   status.value = new Status(Status.POLLSTATUSINACTIVE, response["debug"], "");

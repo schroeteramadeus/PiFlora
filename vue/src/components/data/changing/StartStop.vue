@@ -26,8 +26,11 @@ function onStart(){
         //TODO handle error
         //__bluetoothManagerOnStatusReady(el,this.responseText);
         statusStore.update();
+        console.log(statusStore.status.errorSet);
+        console.log(props.switchUrl + "?running=true");
       }
     };
+
     xhttp.open("GET", props.switchUrl + "?running=true", true);
     xhttp.send();
 }
