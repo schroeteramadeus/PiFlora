@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Callable
 from urllib.parse import ParseResult, parse_qs, urlparse
 
@@ -54,12 +55,12 @@ class ServerRequest:
 
 class VirtualFileHandler:
 
-    def __init__(self, method : _VirtualFileMethod, type : _VirtualFileType, func : Callable[['VirtualFile', ParseResult], str]) -> None:
+    def __init__(self, method : _VirtualFileMethod, type : _VirtualFileType, func : Callable[[VirtualFile, ParseResult], str]) -> None:
         self.__method = method
         self.__func = func
         self.__type = type
 
-    def excecute(self, file : 'VirtualFile', data : ServerRequest) -> str:
+    def excecute(self, file : VirtualFile, data : ServerRequest) -> str:
         return self.__func(file, data)
     
     @property
@@ -67,7 +68,7 @@ class VirtualFileHandler:
         return self.__method
 
     @property
-    def Func(self) -> Callable[['VirtualFile', ParseResult], str]:
+    def Func(self) -> Callable[[VirtualFile, ParseResult], str]:
         return self.__func
     
     @property
@@ -75,7 +76,7 @@ class VirtualFileHandler:
         return self.__type
 
 class VirtualFile:
-    def __init__(self,parent : 'VirtualFile', name : str) -> None:
+    def __init__(self,parent : VirtualFile, name : str) -> None:
         if not "/" in name:
             self.__name : str = name.lower()
             self.__parent : VirtualFile = parent
@@ -93,7 +94,7 @@ class VirtualFile:
         else:
             raise ValueError("name can not contain \"/\"")
 
-    def AddNewChildFile(self, name : str) -> 'VirtualFile':
+    def AddNewChildFile(self, name : str) -> VirtualFile:
         if not self.FileExists(name):
             return VirtualFile(self, name)
         else:
@@ -107,7 +108,7 @@ class VirtualFile:
 
         return True
 
-    def GetFile(self, path : str) -> 'VirtualFile':
+    def GetFile(self, path : str) -> VirtualFile:
         path = path.replace("\\", "/").rstrip("/").lower()
         names = path.split("/")
 
@@ -149,14 +150,14 @@ class VirtualFile:
             else:
                 raise ValueError("Path not vaid")     
 
-    def GetFileOrNone(self, path : str) -> 'VirtualFile' | None:
+    def GetFileOrNone(self, path : str) -> VirtualFile | None:
         try:
             return self.GetFile(path)
         except(ValueError):
             #TODO log error
             return None
 
-    def GetAllFiles(self) -> list['VirtualFile']:
+    def GetAllFiles(self) -> list[VirtualFile]:
         childs = []
         for name in self.__childs:
             childs.append(self.__childs[name])
@@ -173,13 +174,13 @@ class VirtualFile:
         return "/" + path
 
     @property
-    def Childs(self) -> dict[str, 'VirtualFile']:
+    def Childs(self) -> dict[str, VirtualFile]:
         return self.__childs
     @property
     def Name(self) -> str:
         return self.__name
     @property
-    def Parent(self) -> 'VirtualFile' | None:
+    def Parent(self) -> VirtualFile | None:
         return self.__parent
 
     def Excecute(self, method : _VirtualFileMethod, data : ServerRequest) -> str:

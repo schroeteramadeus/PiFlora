@@ -1,5 +1,5 @@
+from __future__ import annotations
 from ..Utils.Event import Event
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # Only imports the below statements during type checking
     from ..Plants.PlantManager import PlantManager
@@ -12,7 +12,7 @@ class PlantEvent(Event):
     #plants = all plants (on the same sensor), regardeless if having the error
     #errorList = dict with plants as keys that also have the same error, containing the time that the error was first detected
     #error = the actual error (code)
-    def __call__(self, plantEventData : 'PlantEventData') -> None:
+    def __call__(self, plantEventData : PlantEventData) -> None:
         for eventhandler in self._eventhandlers:
             eventhandler(plantEventData)
 

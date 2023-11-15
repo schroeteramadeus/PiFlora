@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 import json
 import logging
@@ -8,7 +9,7 @@ from ....Utils.VirtualLogger import VirtualLogger
 
 #TODO instead of setup files
 class ServerModule(ABC):
-    __Modules : dict[type, 'ServerModule'] = {}
+    __Modules : dict[type, ServerModule] = {}
 
     __modulesInited = False
 
@@ -19,13 +20,13 @@ class ServerModule(ABC):
         #else:
         #    raise IndexError("Module " + self.__class__ + " already exists")
 
-    def TryGetModule(t : type) -> 'ServerModule' | None:
+    def TryGetModule(t : type) -> ServerModule | None:
         if t in ServerModule.__Modules:
             return ServerModule.__Modules[t]
         else:
             return None
 
-    def GetModule(t : type) -> 'ServerModule':
+    def GetModule(t : type) -> ServerModule:
         module = ServerModule.TryGetModule(t)
         if module == None:
             raise KeyError("Could not load " + t.__name__)
@@ -52,7 +53,7 @@ class ServerModule(ABC):
     def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:
         pass
 
-    def __getModSaveFileFolder(saveFileFolder : str, mod : 'ServerModule') -> str:
+    def __getModSaveFileFolder(saveFileFolder : str, mod : ServerModule) -> str:
         return saveFileFolder + "/" + str(mod.__name__.replace(".", "_"))
 
     def SaveModules(config : Config) -> None:

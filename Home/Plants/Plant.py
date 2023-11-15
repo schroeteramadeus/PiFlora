@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Callable
 from ..Hardware.Actors.Actor import Actor
 from ..Hardware.Sensors.Sensor import Sensor
@@ -21,10 +22,10 @@ class Plant:
         self.__plantConfiguration : plant_configuration = plantConfiguration
         self.__hardware : dict[str, Actor | Sensor] = hardware
 
-    def AddOnPlantChangedEventHandler(self, handler : Callable(['Plant', object, object, str], None)) -> None:
+    def AddOnPlantChangedEventHandler(self, handler : Callable([Plant, object, object, str], None)) -> None:
         self.__onPlantChanged += handler
         
-    def RemoveOnPlantChangedEventHandler(self, handler : Callable(['Plant', object, object, str], None)) -> None:
+    def RemoveOnPlantChangedEventHandler(self, handler : Callable([Plant, object, object, str], None)) -> None:
         self.__onPlantChanged -= handler
 
     @property
@@ -64,7 +65,7 @@ class Plant:
         return self.__hardware
 
     @staticmethod
-    def FromPlant(plant : 'Plant', newHardware : dict[str, Actor | Sensor]) -> 'Plant':
+    def FromPlant(plant : Plant, newHardware : dict[str, Actor | Sensor]) -> Plant:
         return Plant(plant.PlantConfiguration, newHardware)
 
     def __str__(self) -> str:
