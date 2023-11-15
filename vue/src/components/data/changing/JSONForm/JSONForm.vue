@@ -2,7 +2,7 @@
 import { ref, onUnmounted, onMounted, defineComponent, useSlots, type Slot, type RendererElement, type RendererNode, type VNode} from 'vue';
 import { computed } from '@vue/reactivity';
 import {populate} from "@/assets/js/lib"
-import {defineTableDataStore} from "@/stores/TableDataStore"
+//import {defineDataStore} from "@/stores/DataStore"
 import { stringifyExpression } from '@vue/compiler-core';
 import JSONFormElement from './JSONFormElement.vue';
 
@@ -91,4 +91,4 @@ function submit(){
 
 <style scoped>
 
-</style>
+</style>@/stores/DataStore

@@ -2,7 +2,7 @@
 import { ref, onUnmounted, onMounted, defineComponent, useSlots} from 'vue';
 import { computed } from '@vue/reactivity';
 import {populate} from "@/assets/js/lib"
-import {defineTableDataStore} from "@/stores/TableDataStore"
+import {defineDataStore} from "@/stores/DataStore"
 
 let props = defineProps({
   name: {
@@ -34,4 +34,4 @@ if(columns != null){
 
 <style scoped>
 
-</style>
+</style>@/stores/DataStore

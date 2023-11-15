@@ -2,7 +2,7 @@
 import { ref, onUnmounted, onMounted, defineComponent, useSlots, type Slot, type RendererElement, type RendererNode, type VNode} from 'vue';
 import { computed } from '@vue/reactivity';
 import {populate} from "@/assets/js/lib"
-import {defineTableDataStore} from "@/stores/TableDataStore"
+//import {defineDataStore} from "@/stores/DataStore"
 
 //TODO
 let props = defineProps({
@@ -28,4 +28,4 @@ const childs = slots.default ? slots.default() : null;
 </template>
 
 <style scoped>
-</style>
+</style>@/stores/DataStore

@@ -2,7 +2,7 @@
 import { ref, onUnmounted, onMounted, defineComponent, useSlots, type Slot, type RendererElement, type RendererNode, type VNode} from 'vue';
 import { computed } from '@vue/reactivity';
 import {populate} from "@/assets/js/lib"
-import {defineTableDataStore} from "@/stores/TableDataStore"
+import {defineDataStore} from "@/stores/DataStore"
 import DataTableColumnGroup from './DataTableColumnGroup.vue';
 import DataTableColumn from './DataTableColumn.vue';
 import { StatusVars } from '@/data/StatusVars';
@@ -19,7 +19,7 @@ let props = defineProps({
   },
 });
 
-let dataTableStore = defineTableDataStore(props.url).get();
+let dataTableStore = defineDataStore(props.url).get();
 
 let name = dataTableStore.$id;
 
@@ -207,4 +207,4 @@ onUnmounted(()=>{
 
 <style scoped>
 
-</style>
+</style>@/stores/DataStore

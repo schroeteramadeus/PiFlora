@@ -35,11 +35,18 @@ export const useConfigStore = defineStore("config", () => {
         allDevicesUrl: rootDirectory + "/bluetoothservice/devices",
     }
 
+    const gpioConfig = {
+        serviceUrl: rootDirectory + "/gpioservice",
+        allGpiosUrl: rootDirectory + "/gpioservice/gpios/all",
+        availableGpiosUrl: rootDirectory + "/gpioservice/gpios/available",
+    }
+
     return {
         rootDirectory,
         systemConfig,
         pythonTypes,
         plantManagerConfig,
+        gpioConfig,
         bluetoothConfig
     }
 });

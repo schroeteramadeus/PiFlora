@@ -23,11 +23,9 @@ function onStart(){
 
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
-        //TODO handle error
+        //TODO handle error, log
         //__bluetoothManagerOnStatusReady(el,this.responseText);
         statusStore.update();
-        console.log(statusStore.status.errorSet);
-        console.log(props.switchUrl + "?running=true");
       }
     };
 
@@ -39,7 +37,7 @@ function onStop(){
 
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-            //TODO handle error
+            //TODO handle error, log
             //__bluetoothManagerOnStatusReady(el,this.responseText);
             statusStore.update();
         }

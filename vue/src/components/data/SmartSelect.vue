@@ -2,7 +2,7 @@
 import { ref, onUnmounted, onMounted, defineComponent, useSlots, type Slot, type RendererElement, type RendererNode, type VNode} from 'vue';
 import { computed } from '@vue/reactivity';
 import {populate} from "@/assets/js/lib"
-import {defineTableDataStore} from "@/stores/TableDataStore"
+//import {defineDataStore} from "@/stores/TableDataStore"
 
 //TODO
 let props = defineProps({
@@ -43,4 +43,4 @@ onUnmounted(()=>{
 
 <style scoped>
 
-</style>
+</style>@/stores/DataStore

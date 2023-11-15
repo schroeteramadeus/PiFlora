@@ -2,7 +2,7 @@ import { ref, computed, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 import { urlToName } from '@/assets/js/lib'
 
-export function defineTableDataStore(dataURL : string){
+export function defineDataStore(dataURL : string){
   return {
     get:getOrCreateStore(urlToName(dataURL), dataURL)
   }

@@ -10,9 +10,13 @@ import { eventTargetToElement } from '@/assets/js/lib';
 import JSONForm from '@/components/data/changing/JSONForm/JSONForm.vue'
 import JSONFormElement from '@/components/data/changing/JSONForm/JSONFormElement.vue'
 import { computed } from '@vue/reactivity';
+import {defineDataStore} from "@/stores/DataStore"
 
 const configStore = useConfigStore();
-const logStore = useLogStore()
+const logStore = useLogStore();
+
+const gpioPumpStore = defineDataStore(configStore.gpioConfig.allGpiosUrl).get();
+const mifloraPlantSensorStore = defineDataStore(configStore.bluetoothConfig.allDevicesUrl + "?" + configStore.plantManagerConfig.plantNameFilterParam + "=" + configStore.plantManagerConfig.plantManagerBluetoothFilter).get();
 
 //TODO load pumps and sensors 
 
@@ -262,6 +266,11 @@ onMounted(() => {
     }else{
         showTable();
     }
+    gpioPumpStore.update();
+    mifloraPlantSensorStore.update();
+    //console.log(gpioPumpStore.data);
+    console.log(mifloraPlantSensorStore.data.data['devices']);
+    console.log(mifloraPlantSensorStore.data.data['devices'][0]);
 })
 
 
@@ -308,21 +317,21 @@ onMounted(() => {
             <JSONFormElement :data="() => {return {type: getData('sensorTypes'), id: getData('miFloraPlantSensors')};}" :keys="['sensor']">
                 <label>Sensor</label>
                 <select id="sensorTypes">
-                    <!--TODO add other sensor type select-->
-                    <option id="sensorTypeMiFloraPlantSensor" value="MiFloraPlantSensor" selected="true">MiFlora Plantsensor</option>
+                    <!--TODO add other sensor type select and polling info-->
+                    <option id="sensorTypeMiFloraPlantSensor" :value=configStore.pythonTypes.plantSensor.miFlora selected="true">MiFlora Plantsensor</option>
                 </select>
                 <select id="miFloraPlantSensors" @change="event => updateSelect(eventTargetToElement(event.target) as HTMLSelectElement, 'color')">
-                    <option id="sensorOption" style="display:none;" data-poll="data_mac">Polling...</option>
+                    <option v-for="mifloraSensor in mifloraPlantSensorStore.data.data['devices']" id="sensorOption" :value="mifloraSensor['mac']">{{mifloraSensor['name'] + " (" + mifloraSensor['mac'] + ")"}}</option>
                 </select>
             </JSONFormElement>
             <JSONFormElement :data="() => {return {type: getData('pumpTypes'), id: getData('gpioPumps')};}" :keys="['pump']">
                 <label>Pump</label>
                 <select id="pumpTypes">
-                    <!--TODO add other sensor type select-->
-                    <option value="GPIOPump" selected="true">GPIO Pump</option>
+                    <!--TODO add other sensor type select and polling info-->
+                    <option :value=configStore.pythonTypes.waterPump.gpio selected="true">GPIO Pump</option>
                 </select>
                 <select id="gpioPumps" @change="event => updateSelect(eventTargetToElement(event.target) as HTMLSelectElement, 'color')">
-                    <option style="display:none;" data-poll="data_mac">Polling...</option>
+                    <option v-for="gpioPump in gpioPumpStore.data.data['gpios']" :value="gpioPump['port']">{{"Port " + gpioPump['port']}}</option>
                 </select>
             </JSONFormElement>
         </JSONForm>

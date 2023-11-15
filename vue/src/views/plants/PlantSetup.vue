@@ -9,24 +9,20 @@ import StartStop from '@/components/data/changing/StartStop.vue';
 
 
 const logStore = useLogStore();
-const config = useConfigStore();
-const PLANTIDPARAM = config.plantManagerConfig.plantIdParameter;
+const configStore = useConfigStore();
+const PLANTIDPARAM = configStore.plantManagerConfig.plantIdParameter;
 
 
 </script>
 
 <template>
     <PlantMenu>
-        <h1 class="center">Plant manager status:<StatusBar :url=config.plantManagerConfig.statusUrl /></h1>
+        <h1 class="center">Plant manager status:<StatusBar :url=configStore.plantManagerConfig.statusUrl /></h1>
         
         <br />
         <div class="center">
-            <StartStop :switch-url=config.plantManagerConfig.switchUrl :status-url=config.plantManagerConfig.statusUrl />
+            <StartStop :switch-url=configStore.plantManagerConfig.switchUrl :status-url=configStore.plantManagerConfig.statusUrl />
         </div>
-        <!--div class="center">
-            <input type="button" onclick="startPlantmanager(document.getElementById('plantmanagerStatus'))" value="Start"/>
-            <input type="button" onclick="stopPlantmanager(document.getElementById('plantmanagerStatus'))" value="Stop"/>
-        </div-->
         <input type="button" @click="event => router.push('/plantmanager/plants/configure')" value="New plant"/>
         <br />
 
