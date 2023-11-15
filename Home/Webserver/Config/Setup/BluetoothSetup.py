@@ -11,7 +11,7 @@ class BluetoothModule(ServerModule):
         if BluetoothModule.TryGet() == None:
             super().__init__()
             self.__bluetoothManager = BluetoothManager
-            self.__systemModule = None #type: SystemModule
+            self.__systemModule : SystemModule = None
 
     @property
     def BluetoothManager(self) -> Type[BluetoothManager]:
@@ -30,20 +30,19 @@ class BluetoothModule(ServerModule):
         
         BluetoothManagerSetDebugMode(debug or BluetoothManagerIsDebugMode())
 
-        self.__bluetoothServiceFile = rootFile.AddNewChildFile("bluetoothservice") #type: VirtualFile
+        self.__bluetoothServiceFile : VirtualFile = rootFile.AddNewChildFile("bluetoothservice")
         self.__bluetoothServiceFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.__systemModule.ListVirtualFiles))
 
-        self.__bluetoothServiceStatusFile = self.__bluetoothServiceFile.AddNewChildFile("status")
+        self.__bluetoothServiceStatusFile : VirtualFile = self.__bluetoothServiceFile.AddNewChildFile("status")
         self.__bluetoothServiceStatusFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,self.__bluetoothServiceStatus))
 
-        self.__bluetoothServiceSwitchFile = self.__bluetoothServiceFile.AddNewChildFile("switch")
+        self.__bluetoothServiceSwitchFile : VirtualFile = self.__bluetoothServiceFile.AddNewChildFile("switch")
         self.__bluetoothServiceSwitchFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,self.__bluetoothServiceSwitch))
 
-        self.__bluetoothServiceDevicesFile = self.__bluetoothServiceFile.AddNewChildFile("devices")
+        self.__bluetoothServiceDevicesFile : VirtualFile = self.__bluetoothServiceFile.AddNewChildFile("devices")
         self.__bluetoothServiceDevicesFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,self.__getBluetoothDevices))
 
-    def __bluetoothServiceStatus(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __bluetoothServiceStatus(self, file : VirtualFile, request : ServerRequest) -> str:
         data = {}
         data["running"] = False
         data["debug"] = False
@@ -58,9 +57,7 @@ class BluetoothModule(ServerModule):
             }
         return json.dumps(data)
 
-    def __bluetoothServiceSwitch(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
-        
+    def __bluetoothServiceSwitch(self, file : VirtualFile, request : ServerRequest) -> str:        
         if self.__bluetoothManager != None:
             if "running" in request.GetParameters:
                 value = str(request.GetParameters["running"][0])
@@ -78,8 +75,7 @@ class BluetoothModule(ServerModule):
 
         return self.__bluetoothServiceStatus(file, request)
 
-    def __getBluetoothDevices(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __getBluetoothDevices(self, file : VirtualFile, request : ServerRequest) -> str:
         data = {}
         data["error"] = self.__systemModule.NoErrorResponse
         if self.__bluetoothManager != None:

@@ -34,23 +34,21 @@ def SetDebugMode(value: bool):
     debugMode = value
 
 class BluetoothManager:
-    __startedInDebugMode = False
-    __availableDevices = [] #type: list[dict[str,str]] #name and mac
-    __availableDevicesLock = threading.Lock()
-    __running = False
-    __deviceFetchTask = None #type: threading.Thread
-    __deviceFetchTaskCancellationToken = None #type:threading.Event
+    __startedInDebugMode : bool = False
+    __availableDevices : list[dict[str,str]] = [] #name and mac
+    __availableDevicesLock : threading.Lock = threading.Lock()
+    __running : bool = False
+    __deviceFetchTask : threading.Thread = None
+    __deviceFetchTaskCancellationToken : threading.Event = None
 
     def IsRunning() -> bool:
-        #type: () -> bool
         return BluetoothManager.__running
 
     def IsDebug() -> bool:
         global debugMode
-        #type: () -> bool
         return (debugMode and not BluetoothManager.IsRunning()) or BluetoothManager.__startedInDebugMode
 
-    def Start():
+    def Start() -> None:
         if not BluetoothManager.IsRunning():
             _logger.info("Bluetoothservice starting...")
             debug = debugMode #threadsafety (hopefully)
@@ -63,7 +61,7 @@ class BluetoothManager:
             BluetoothManager.__running = True
             _logger.debug("Bluetoothservice is now running")
 
-    def Stop():
+    def Stop() -> None:
         if BluetoothManager.IsRunning():
             _logger.info("Bluetoothservice stopping...")
             if not BluetoothManager.__startedInDebugMode:
@@ -78,9 +76,8 @@ class BluetoothManager:
             BluetoothManager.__running = False
             _logger.debug("Bluetoothservice has now stopped")
 
-    def GetAvailableDevices():
-        #type: () -> list[dict[str,str]]
-        devices = [] #type: list[dict[str,str]]
+    def GetAvailableDevices() -> list[dict[str,str]]:
+        devices : list[dict[str,str]] = []
         if not BluetoothManager.IsDebug():
             with BluetoothManager.__availableDevicesLock:
                 devices = BluetoothManager.__availableDevices
@@ -88,9 +85,8 @@ class BluetoothManager:
             devices = debugDeviceData
         return devices
 
-    def GetFilteredAvailableDevices(filterNameMask):
-        #type: () -> list[dict[str,str]]
-        output = []#type: list[dict[str,str]]
+    def GetFilteredAvailableDevices(filterNameMask) -> list[dict[str,str]]:
+        output : list[dict[str,str]] = []
         devices = BluetoothManager.GetAvailableDevices()
 
         for x in range(len(devices)):
@@ -98,7 +94,7 @@ class BluetoothManager:
                 output.append(devices[x])
         return output
 
-    def __fetchScanData(cancellationToken : threading.Event, scanningTime : float):
+    def __fetchScanData(cancellationToken : threading.Event, scanningTime : float) -> None:
         _logger.info("Fetching task started...")
 
         while True:

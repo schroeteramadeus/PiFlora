@@ -11,7 +11,7 @@ class GPIOModule(ServerModule):
         if GPIOModule.TryGet() == None:
             super().__init__()
             self.__gpioManager = GPIOManager
-            self.__systemModule = None #type: SystemModule
+            self.__systemModule : SystemModule = None
 
     def OnSave(self, saveFolderPath : str) -> None:
         pass
@@ -25,24 +25,23 @@ class GPIOModule(ServerModule):
     def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:
         self.__systemModule = SystemModule.Get()
         
-        self.__gpioServiceFile = rootFile.AddNewChildFile("gpioservice")
+        self.__gpioServiceFile : VirtualFile = rootFile.AddNewChildFile("gpioservice")
         self.__gpioServiceFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.__systemModule.ListVirtualFiles))
 
-        self.__gpioServiceGPIOFile = self.__gpioServiceFile.AddNewChildFile("gpios")
+        self.__gpioServiceGPIOFile : VirtualFile = self.__gpioServiceFile.AddNewChildFile("gpios")
         self.__gpioServiceGPIOFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_HTMLFILE,self.__systemModule.ListVirtualFiles))
 
-        self.__gpioServiceGPIOAvailableFile = self.__gpioServiceGPIOFile.AddNewChildFile("available")
+        self.__gpioServiceGPIOAvailableFile : VirtualFile = self.__gpioServiceGPIOFile.AddNewChildFile("available")
         self.__gpioServiceGPIOAvailableFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,self.__getAvailableGPIOs))
 
-        self.__gpioServiceGPIOAllFile = self.__gpioServiceGPIOFile.AddNewChildFile("all")
+        self.__gpioServiceGPIOAllFile : VirtualFile = self.__gpioServiceGPIOFile.AddNewChildFile("all")
         self.__gpioServiceGPIOAllFile.Bind(VirtualFileHandler(METHOD_GET, TYPE_JSONFILE,self.__getAllGPIOs))
 
     @property
     def GPIOManager(self) -> Type[GPIOManager]:
         return self.__gpioManager
 
-    def __getAllGPIOs(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __getAllGPIOs(self, file : VirtualFile, request : ServerRequest) -> str:
         data = {}
         data["gpios"] = []
 
@@ -71,8 +70,7 @@ class GPIOModule(ServerModule):
 
         return json.dumps(data)
 
-    def __getAvailableGPIOs(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __getAvailableGPIOs(self, file : VirtualFile, request : ServerRequest) -> str:
         data = {}
         data["gpios"] = []
 

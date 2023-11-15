@@ -10,7 +10,7 @@ from typing import Callable
 import socket
 from VueCompiler import VueCompiler
 
-#TODO use GraphQL for get/post requests
+#TODO use GraphQL for get/post requests?
 if __name__ == "__main__":
     
     compiling = False

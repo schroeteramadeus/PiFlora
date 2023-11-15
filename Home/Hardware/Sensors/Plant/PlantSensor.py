@@ -8,8 +8,7 @@ class PlantSensor(Sensor):
         super().__init__()
         
     @abstractmethod
-    def PollSensor(self):
-        #type: () -> dict[str, object]
+    def PollSensor(self) -> dict[str, object]:
         pass
             
 class PlantSensorParameters:

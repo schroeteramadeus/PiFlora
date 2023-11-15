@@ -5,6 +5,5 @@ WATER_SENSOR_UNDER_WATER = "water"
 
 class WaterSensor(Sensor):
     @abstractmethod
-    def PollSensor(self):
-        #type: () -> dict[str, object]
+    def PollSensor(self) -> dict[str, object]:
         pass

@@ -1,8 +1,8 @@
 from typing import Callable
 from ..Hardware.Actors.Actor import Actor
 from ..Hardware.Sensors.Sensor import Sensor
-from .PlantConfiguration import PlantConfiguration
-from ..Hardware.Sensors.Plant.PlantSensor import PlantSensor
+from .PlantConfiguration import PlantConfiguration as plant_configuration
+from ..Hardware.Sensors.Plant.PlantSensor import PlantSensor as plant_sensor
 from ..Hardware.Actors.Water.Pump import Pump
 from .PlantEvent import PlantChangedEvent
 
@@ -16,52 +16,43 @@ class Plant:
     EVENTTYPE_PUMP = "pump"
     EVENTTYPE_PLANTCONFIGURATION = "configuration"
 
-    def __init__(self, plantConfiguration, hardware = {}) -> None:
-        #type: (PlantConfiguration, dict[str, Actor | Sensor]) -> None
-        self.__onPlantChanged = PlantChangedEvent() #type: PlantChangedEvent
-        self.__plantConfiguration = plantConfiguration #type: PlantConfiguration
-        self.__hardware = hardware #type: dict[str, Actor | Sensor]
+    def __init__(self, plantConfiguration : plant_configuration, hardware : dict[str, Actor | Sensor] = {}) -> None:
+        self.__onPlantChanged : PlantChangedEvent = PlantChangedEvent()
+        self.__plantConfiguration : plant_configuration = plantConfiguration
+        self.__hardware : dict[str, Actor | Sensor] = hardware
 
-    def AddOnPlantChangedEventHandler(self, handler):
-        #type: (Callable([Plant, object, object, str], None)) -> None
+    def AddOnPlantChangedEventHandler(self, handler : Callable(['Plant', object, object, str], None)) -> None:
         self.__onPlantChanged += handler
         
-    def RemoveOnPlantChangedEventHandler(self, handler):
-        #type: (Callable([Plant, object, object, str], None)) -> None
+    def RemoveOnPlantChangedEventHandler(self, handler : Callable(['Plant', object, object, str], None)) -> None:
         self.__onPlantChanged -= handler
 
     @property
-    def PlantSensor(self):
-        #type: () -> PlantSensor
+    def PlantSensor(self) -> plant_sensor:
         return self.__hardware[Plant.HARDWARE_PLANTSENSOR]
 
     @PlantSensor.setter
-    def PlantSensor(self, plantSensor):
-        #type: (PlantSensor) -> None
+    def PlantSensor(self, plantSensor : plant_sensor) -> None:
         old = self.__hardware[Plant.HARDWARE_PLANTSENSOR]
         self.__hardware[Plant.HARDWARE_PLANTSENSOR] = plantSensor
         self.__onPlantChanged(self, old, plantSensor, Plant.EVENTTYPE_PLANTSENSOR)
 
     @property
-    def PlantConfiguration(self):
-        #type: () -> PlantConfiguration
+    def PlantConfiguration(self) -> plant_configuration:
         return self.__plantConfiguration
     
     @PlantConfiguration.setter
-    def PlantConfiguration(self, plantConfiguration):
-        #type: (PlantConfiguration) -> None
+    def PlantConfiguration(self, plantConfiguration : plant_configuration) -> None:
         old = self.__plantConfiguration
         self.__plantConfiguration = plantConfiguration
         self.__onPlantChanged(self, old, plantConfiguration, Plant.EVENTTYPE_PLANTCONFIGURATION)
 
     @property
-    def Pump(self):
-        #type: () -> Pump
+    def Pump(self) -> Pump:
         return self.__hardware[Plant.HARDWARE_PUMP]
 
     @Pump.setter
-    def Pump(self, pump):
-        #type: (Pump) -> None
+    def Pump(self, pump : Pump) -> None:
         old = self.__hardware[Plant.HARDWARE_PUMP]
         self.__hardware[Plant.HARDWARE_PUMP] = pump
         self.__onPlantChanged(self, old, pump, Plant.EVENTTYPE_PUMP)
@@ -69,14 +60,12 @@ class Plant:
     #TODO setter + getter for other standard hardware e.g. lamps?
 
     @property
-    def Hardware(self):
-        #type: () -> dict[str, Actor | Sensor]
+    def Hardware(self) -> dict[str, Actor | Sensor]:
         return self.__hardware
 
     @staticmethod
-    def FromPlant(plant, newHardware):
-        #type: (Plant, dict[str, Actor | Sensor]) -> Plant
+    def FromPlant(plant : 'Plant', newHardware : dict[str, Actor | Sensor]) -> 'Plant':
         return Plant(plant.PlantConfiguration, newHardware)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.PlantConfiguration.Name

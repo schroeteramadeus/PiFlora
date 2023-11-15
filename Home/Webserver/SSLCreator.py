@@ -1,5 +1,5 @@
 import logging
-_importResolved = False
+_importResolved : bool = False
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ def Create(
     #can look at generated file using openssl:
     #openssl x509 -inform pem -in selfsigned.crt -noout -text
     # create a key pair
-    k = crypto.PKey()
-    k.generate_key(crypto.TYPE_RSA, 4096)
+    key = crypto.PKey()
+    key.generate_key(crypto.TYPE_RSA, 4096)
     # create a self-signed cert
     cert = crypto.X509()
     cert.get_subject().C = countryName
@@ -54,8 +54,8 @@ def Create(
         cert.set_issuer(cert.get_subject())
     else:
         cert.set_issuer(issuer)
-    cert.set_pubkey(k)
-    cert.sign(k, 'sha512')
+    cert.set_pubkey(key)
+    cert.sign(key, 'sha512')
 
     error = False
 
@@ -74,9 +74,9 @@ def Create(
         keyF = open(keyFile, "wt")
         try:
             if cipher != None and cipher.strip() != "":
-                keyF.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode("utf-8"))
+                keyF.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode("utf-8"))
             else:
-                keyF.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k, cipher=cipher).decode("utf-8"))
+                keyF.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key, cipher=cipher).decode("utf-8"))
         except:
             error = True
         finally:

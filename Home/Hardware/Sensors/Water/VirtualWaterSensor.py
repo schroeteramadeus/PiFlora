@@ -3,16 +3,14 @@ import time
 
 class VirtualWaterSensor(WaterSensor):
 
-    def __init__(self, maximumWater, minimumWater, waterPerDay) -> None:
-        #type: (bool, float, float, float) -> None
+    def __init__(self, maximumWater : float, minimumWater : float, waterPerDay : float) -> None:
         super().__init__()
         self.__maximumWater = maximumWater
         self.__minimumWater = minimumWater
         self.__waterPerDay = waterPerDay
         self.__lastTimeFilled = time.time()
 
-    def PollSensor(self):
-        #type: () -> dict[str, object]
+    def PollSensor(self) -> dict[str, object]:
         waterPerSecond = self.__waterPerDay / 24 / 60 / 60
         secondsSinceRefill = time.time() - self.__lastTimeFilled
 
@@ -27,6 +25,5 @@ class VirtualWaterSensor(WaterSensor):
                 WATER_SENSOR_UNDER_WATER: False
             }
 
-    def Reset(self):
-        #type: () -> None
+    def Reset(self) -> None:
         self.__lastTimeFilled = time.time()

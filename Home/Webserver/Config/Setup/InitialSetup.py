@@ -8,7 +8,7 @@ from ....Utils.VirtualLogger import VirtualLogger
 
 #TODO instead of setup files
 class ServerModule(ABC):
-    __Modules = {} #type:dict[type, ServerModule]
+    __Modules : dict[type, 'ServerModule'] = {}
 
     __modulesInited = False
 
@@ -19,23 +19,23 @@ class ServerModule(ABC):
         #else:
         #    raise IndexError("Module " + self.__class__ + " already exists")
 
-    def TryGetModule(t : type):
+    def TryGetModule(t : type) -> 'ServerModule' | None:
         if t in ServerModule.__Modules:
             return ServerModule.__Modules[t]
         else:
             return None
 
-    def GetModule(t : type):
+    def GetModule(t : type) -> 'ServerModule':
         module = ServerModule.TryGetModule(t)
         if module == None:
             raise KeyError("Could not load " + t.__name__)
         return module
     
     @classmethod
-    def Get(cls):
+    def Get(cls : type):
         return ServerModule.GetModule(cls)
     @classmethod
-    def TryGet(cls):
+    def TryGet(cls : type):
         return ServerModule.TryGetModule(cls)
 
     @abstractmethod
@@ -52,11 +52,10 @@ class ServerModule(ABC):
     def OnInit(self, debug : bool, rootFile : VirtualFile) -> None:
         pass
 
-    def __getModSaveFileFolder(saveFileFolder, mod : type):
-        #type: (str, ServerModule) -> str
+    def __getModSaveFileFolder(saveFileFolder : str, mod : 'ServerModule') -> str:
         return saveFileFolder + "/" + str(mod.__name__.replace(".", "_"))
 
-    def SaveModules(config : Config):
+    def SaveModules(config : Config) -> None:
         if ServerModule.__modulesInited:
             if not os.path.exists(config.SaveFileFolder):
                 os.mkdir(config.SaveFileFolder)
@@ -66,19 +65,19 @@ class ServerModule(ABC):
                     os.mkdir(modSaveFileFolder)
                 ServerModule.__Modules[mod].OnSave(modSaveFileFolder)
 
-    def LoadModules(config : Config):
+    def LoadModules(config : Config) -> None:
         if ServerModule.__modulesInited:
             for mod in ServerModule.__Modules:
                 modSaveFileFolder = ServerModule.__getModSaveFileFolder(config.SaveFileFolder, mod)
                 ServerModule.__Modules[mod].OnLoad(modSaveFileFolder)
 
-    def CloseModules(config : Config):
+    def CloseModules(config : Config) -> None:
         if ServerModule.__modulesInited:
             for mod in ServerModule.__Modules:
                 ServerModule.__Modules[mod].OnClose()
             ServerModule.__modulesInited = False
 
-    def InitModules(config : Config):
+    def InitModules(config : Config) -> None:
         if not ServerModule.__modulesInited:
             for mod in ServerModule.__Modules:
                 ServerModule.__Modules[mod].OnInit(config.Debug, config.RootFile)
@@ -125,11 +124,8 @@ class SystemModule(ServerModule):
         "message": None
         }
 
-    def ListVirtualFiles(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
-
+    def ListVirtualFiles(self, file : VirtualFile, request : ServerRequest) -> str:
         head = ""
-
         body = "<h1>Files in " + file.FullPath + "</h1><ul>"
 
         for f in file.GetAllFiles():
@@ -150,13 +146,12 @@ class SystemModule(ServerModule):
         html = "<!DOCTYPE html><html><head>" + head + "</head><body>" + body + "</body></html>"
         return html
 
-    def __getLogs(self,file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __getLogs(self,file : VirtualFile, request : ServerRequest) -> str:
         data = {}
         data["error"] = self.NoErrorResponse
 
         filter = "_*"
-        level = logging.DEBUG #type: logging._Level
+        level : logging._Level = logging.DEBUG
 
         if "filter" in request.GetParameters:
             filter = str(request.GetParameters["filter"][0])
@@ -184,8 +179,7 @@ class SystemModule(ServerModule):
 
         return json.dumps(data)
 
-    def __setLogger(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __setLogger(self, file : VirtualFile, request : ServerRequest) -> str:
         data = {}
         data["error"] = self.NoErrorResponse
 

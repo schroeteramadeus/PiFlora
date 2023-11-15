@@ -31,56 +31,47 @@ import logging
 logger = logging.getLogger(__name__)
 
 class _GPIOType:
-    def __init__(self, name) -> None:
-        #type: (str) -> None
+    def __init__(self, name : str) -> None:
         self.__name = name
     
     @property
-    def Name(self):
-        #type: () -> str
+    def Name(self) -> str:
         return self.__name
 
 
 class GPIOTypes:
     STANDARDINOUT = _GPIOType("standardinout")
 
-    def GetAll():
+    def GetAll() -> list[_GPIOType]:
         return [
             GPIOTypes.STANDARDINOUT,
         ]
 
 class GPIO:
-    def __init__(self, port, type) -> None:
-        #type: (int, _GPIOType) -> None
+    def __init__(self, port : int, type : _GPIOType) -> None:
         self.__port = port
         self.__type = type
 
     @property
-    def Port(self):
-        #type: () -> int
+    def Port(self) -> int:
         return self.__port
 
     @property
-    def Type(self):
-        #type: () -> _GPIOType
+    def Type(self) -> _GPIOType:
         return self.__type
 
 class _GPIOHandle:
-    def __init__(self, gpio) -> None:
-        #type: (GPIO) -> None
+    def __init__(self, gpio : GPIO) -> None:
         self.__gpio = gpio
 
     @property
-    def GPIO(self):
-        #type: () -> GPIO
+    def GPIO(self) -> GPIO:
         return self.__gpio
 
-    def Write(self, value):
-        #type: (bool) -> None
+    def Write(self, value : bool) -> None:
         #TODO if writeable
         pass
-    def Read(self):
-        #type: () -> bool
+    def Read(self) -> bool:
         #TODO if writeable
         pass
     
@@ -90,12 +81,11 @@ class GPIOManager:
 
     #TODO
     #maybe use pinout()?
-    __GPIOs = { #type: dict[GPIO, bool]
+    __GPIOs : dict[GPIO, bool] = {
         GPIO(17, GPIOTypes.STANDARDINOUT) : False
     }
 
-    def GetAvailableGPIOs():
-        #type: () -> list[GPIO]
+    def GetAvailableGPIOs() -> list[GPIO]:
         unusedGPIOs = []
         for gpio in GPIOManager.__GPIOs:
             if not GPIOManager.__GPIOs[gpio]:
@@ -103,12 +93,10 @@ class GPIOManager:
 
         return unusedGPIOs
 
-    def GetAllGPIOs():
-        #type: () -> list[GPIO]
+    def GetAllGPIOs() -> list[GPIO]:
         return list(GPIOManager.__GPIOs.keys())
 
-    def GetFilteredGPIOs(type):
-        #type: (_GPIOType) -> list[GPIO]
+    def GetFilteredGPIOs(type : _GPIOType) -> list[GPIO]:
         output = []
         availableGPIOs = GPIOManager.GetAllGPIOs()
         for gpio in availableGPIOs:
@@ -116,8 +104,7 @@ class GPIOManager:
                 output.append(gpio)
         return output
 
-    def GetFilteredAvailableGPIOs(type):
-        #type: (_GPIOType) -> list[GPIO]
+    def GetFilteredAvailableGPIOs(type : _GPIOType) -> list[GPIO]:
         output = []
         availableGPIOs = GPIOManager.GetAvailableGPIOs()
         for gpio in availableGPIOs:
@@ -125,8 +112,7 @@ class GPIOManager:
                 output.append(gpio)
         return output
 
-    def RequestGPIO(gpio):
-        #type: (GPIO) -> _GPIOHandle
+    def RequestGPIO(gpio : GPIO) -> _GPIOHandle:
         if gpio in GPIOManager.GetAvailableGPIOs():
             logger.info("Binding GPIO " + str(gpio.Port))
             handle = _GPIOHandle(gpio)
@@ -134,8 +120,7 @@ class GPIOManager:
         else:
             raise AttributeError("GPIO" + str(gpio.Port) + " not valid")
 
-    def FreeGPIO(gpioHandle):
-        #type: (_GPIOHandle) -> None
+    def FreeGPIO(gpioHandle : _GPIOHandle) -> None:
         if gpioHandle.GPIO in GPIOManager.__GPIOs:
             logger.info("Freeing GPIO " + str(gpioHandle.GPIO.Port))
             GPIOManager.__GPIOs[gpioHandle.GPIO] == False

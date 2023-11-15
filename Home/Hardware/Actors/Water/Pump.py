@@ -8,8 +8,7 @@ class Pump(Actor):
     def __init__(self) -> None:
         super().__init__()
 
-    def Act(self, data):
-        #type: (dict[str, object]) -> dict[str, object]
+    def Act(self, data : dict[str, object]) -> dict[str, object]:
         if "water" in data:
             return {
                 "water": self.Water(data["water"]),

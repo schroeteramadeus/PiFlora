@@ -36,16 +36,15 @@ def SetDebugMode(value : bool):
 #TODO add debug mode
 class MiFloraPlantSensor(PlantSensor):
     
-    __usedSensors = [] #type: list[str]
+    __usedSensors : list[str] = []
 
-    def __init__(self, mac) -> None:
-        #type: (str) -> None
+    def __init__(self, mac : str) -> None:
         global debugMode
         super().__init__()
-        self._id = mac #type: str
-        self.__isDebugMode = False
-        self.__firmware = "" #type: str
-        self.__name = "" #type: str
+        self._id : str = mac
+        self.__isDebugMode : bool = False
+        self.__firmware : str = ""
+        self.__name : str = ""
 
         if not self._id in MiFloraPlantSensor.__usedSensors:
             logger.info("Binding plant sensor " + self._id)
@@ -58,8 +57,7 @@ class MiFloraPlantSensor(PlantSensor):
         logger.info("Freeing plant sensor " + self._id)
         self.__usedSensors.remove(self._id)
 
-    def UpdateDebugMode(self, debugMode):
-        #type: (bool) -> None
+    def UpdateDebugMode(self, debugMode : bool) -> None:
         if not debugMode:
             self.__poller = miflora_poller.MiFloraPoller(self._id, BluetoothBackend)
             self.__firmware = self.__poller.firmware_version()
@@ -87,8 +85,7 @@ class MiFloraPlantSensor(PlantSensor):
     def PollSensor(self):
         return self.PollSensor(1)
 
-    def PollSensor(self, pollCount = 5):
-        #type: (int) -> dict[str,object]
+    def PollSensor(self, pollCount : int = 5) -> dict[str,object]:
         output = {}
         currentTime = time.time()
         if not self.IsDebug:

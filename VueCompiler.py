@@ -9,19 +9,19 @@ class VueCompiler:
     COMPILE_POLL_INTERVALL : float = 2
 
     def __init__(self, vuePath : str) -> None:
-        self.__vuePath = vuePath #type: str
-        self.__cancellationLock = threading.Lock() #type:threading.Lock
-        self.__cancellationToken = None #type: threading.Event
-        self.__compileThread = None #type: threading.Thread
-        self.__compileTask = None #type: subprocess.Popen
-        self.__output = [] #type: list[str]
+        self.__vuePath : str = vuePath
+        self.__cancellationLock : threading.Lock = threading.Lock()
+        self.__cancellationToken : threading.Event = None
+        self.__compileThread : threading.Thread = None
+        self.__compileTask : subprocess.Popen = None
+        self.__output  : list[str] = []
 
     @property
     def IsCompiling(self) -> bool:
         with self.__cancellationLock:
             return self.__cancellationToken != None
 
-    def StartCompile(self):
+    def StartCompile(self) -> None:
         if not self.IsCompiling:
             self.__output = []
             self.__cancellationToken = threading.Event()

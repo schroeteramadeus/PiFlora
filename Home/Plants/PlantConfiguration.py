@@ -2,30 +2,29 @@ from ..Utils.ValueSpan import ValueSpan
 
 class PlantConfiguration:
     
-    def __init__(self, name, temperatureSpan, moistureSpan, conductivitySpan, lightSpan) -> None:
-        #type: (str, ValueSpan, ValueSpan, ValueSpan, ValueSpan) -> None
-        self.__name = name#type: str
-        self.__temperatureSpan = temperatureSpan#type: ValueSpan
-        self.__moistureSpan = moistureSpan#type: ValueSpan
-        self.__conductivitySpan = conductivitySpan#type: ValueSpan
-        self.__lightSpan = lightSpan#type: ValueSpan
+    def __init__(self, name : str, temperatureSpan : ValueSpan, moistureSpan : ValueSpan, conductivitySpan : ValueSpan, lightSpan : ValueSpan) -> None:
+        self.__name : str = name
+        self.__temperatureSpan : ValueSpan = temperatureSpan
+        self.__moistureSpan : ValueSpan = moistureSpan
+        self.__conductivitySpan : ValueSpan = conductivitySpan
+        self.__lightSpan : ValueSpan = lightSpan
 
     @property
-    def Name(self):
+    def Name(self) -> str:
         return self.__name
 
     @property
-    def TemperatureSpan(self):
+    def TemperatureSpan(self) -> ValueSpan:
         return self.__temperatureSpan
 
     @property
-    def MoistureSpan(self):
+    def MoistureSpan(self) -> ValueSpan:
         return self.__moistureSpan
 
     @property
-    def ConductivitySpan(self):
+    def ConductivitySpan(self) -> ValueSpan:
         return self.__conductivitySpan
         
     @property
-    def LightSpan(self):
+    def LightSpan(self) -> ValueSpan:
         return self.__lightSpan

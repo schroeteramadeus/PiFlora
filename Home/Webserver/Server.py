@@ -12,42 +12,37 @@ logger = logging.Logger(__name__)
 
 class HybridServer(HTTPServer):
     __id = 0
-    def __init__(self, server_address, RequestHandlerClass, virtualRootFile, runningDirectory = "", serviceableFileExtensions = [], standardpath = "/index.html", bind_and_activate: bool = ...) -> None:
+    def __init__(self, server_address, RequestHandlerClass, virtualRootFile : VirtualFile, runningDirectory : str = "", serviceableFileExtensions : tuple[str] = tuple(), standardpath : str = "/index.html", bind_and_activate: bool = ...) -> None:
         super().__init__(server_address, RequestHandlerClass, bind_and_activate)
-        self.__id = HybridServer.__id
+        self.__id : int = HybridServer.__id
         HybridServer.__id += 1
-        self.__rootFile = virtualRootFile
-        self.__serviceableFileExtensions = tuple(serviceableFileExtensions)
-        self.__runningDirectory = runningDirectory
-        self.__standardPath = standardpath
-        self.__logger = logger.getChild("HybridServer" + str(self.__id))
+        self.__rootFile : VirtualFile = virtualRootFile
+        self.__serviceableFileExtensions : tuple[str] = tuple(serviceableFileExtensions)
+        self.__runningDirectory : str = runningDirectory
+        self.__standardPath : str = standardpath
+        self.__logger : logging.Logger = logger.getChild("HybridServer" + str(self.__id))
 
     @property
-    def Logger(self):
-        #type: () -> logging.Logger
+    def Logger(self) -> logging.Logger:
         return self.__logger
     @property
-    def RootFile(self):
-        #type: () -> VirtualFile
+    def RootFile(self) -> VirtualFile:
         return self.__rootFile
     @property
-    def ServiceableFileExtensions(self):
-        #type: () -> list[str]
+    def ServiceableFileExtensions(self) -> list[str]:
         return self.__serviceableFileExtensions
     @property
-    def StandardPath(self):
-        #type: () -> str
+    def StandardPath(self) -> str:
         return self.__standardPath
     @property
-    def RunningDirectory(self):
-        #type: () -> str
+    def RunningDirectory(self) -> str:
         return self.__runningDirectory
 
 class HybridServerRequestHandler(SimpleHTTPRequestHandler):
 
+    #so that guess_type() works correctly
     def __init__(self, request, client_address, server, *, directory: str | None = None) -> None:
         super().__init__(request, client_address, server, directory=directory)
-        #so that guess_type() works correctly
         self.extensions_map[".js"] = "text/javascript"
 
     def do_GET(self):
@@ -79,8 +74,7 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
         else:
             self.SendInternalError(self)
 
-    def SendFileNotFound(handler, virtual=False):
-        #type: (HybridServerRequestHandler, bool) -> None
+    def SendFileNotFound(handler : 'HybridServerRequestHandler', virtual : bool = False) -> None:
         handler.path = "Error404.html"
         if not virtual and os.path.exists(handler.path) and os.path.isfile(handler.path):
             HybridServerRequestHandler.ServeStaticFile(handler, 404)
@@ -93,8 +87,7 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
             handler.end_headers()
             handler.wfile.write(response)
     
-    def SendInternalError(handler, virtual=False):
-        #type: (HybridServerRequestHandler, bool) -> None
+    def SendInternalError(handler : 'HybridServerRequestHandler', virtual : bool = False) -> None:
         handler.path = "Error500.html"
         
         if not virtual and os.path.exists(handler.path) and os.path.isfile(handler.path):
@@ -113,8 +106,7 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
             handler.end_headers()
             handler.wfile.write(response)
     
-    def ServeStaticFile(handler, status):
-        #type: (HybridServerRequestHandler, int) -> None
+    def ServeStaticFile(handler : 'HybridServerRequestHandler', status : int) -> None:
         try:
             file = open(handler.path, 'rb')
             try:
@@ -138,10 +130,9 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
             else:
                 raise RecursionError("Can not send internal server error static file")
                        
-    def ServeVirtualFile(handler, virtualFile, method, request):
-        #type: (HybridServerRequestHandler, VirtualFile, _VirtualFileMethod, ServerRequest) -> None
+    def ServeVirtualFile(handler : 'HybridServerRequestHandler', virtualFile : VirtualFile, method : _VirtualFileMethod, request : ServerRequest) -> None:
         if virtualFile != None and virtualFile.HasMethodHandler(method):
-            response = None #type: str | None
+            response : str | None = None
             #print("Got Virtual File: " + self.path, flush=True)
             try:
                 response = bytes(virtualFile.Excecute(method, request), "utf-8")
@@ -172,9 +163,9 @@ class HybridServerRequestHandler(SimpleHTTPRequestHandler):
 
         return absolutePath
 
-    def log_message(self, format, *args):
+    def log_message(self, format : str, *args):
         if isinstance(self.server,HybridServer):
-            server = self.server #type: HybridServer
+            server : HybridServer = self.server
             server.__class__ = HybridServer
             message = format.replace("%s", "{}").format(*args)
             status = str(args[1])

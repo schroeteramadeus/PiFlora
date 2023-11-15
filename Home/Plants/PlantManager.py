@@ -14,125 +14,110 @@ _logger = logging.getLogger(__name__)
 
 debugMode = False
 
-def IsDebugMode():
+def IsDebugMode() -> bool:
     global debugMode
     return debugMode
 
-def SetDebugMode(value : bool):
+def SetDebugMode(value : bool) -> None:
     global debugMode
     debugMode = value
 
 class PlantManager:
 
-    __staticId = 0
-    __batterLowLevel = 5
-    __consecutivePolls = 1 #try to use criticalInterval instead (so no DoS happens)
-    __maximumSleepingTime = 5 #for threads waking up to check if manager is still running
+    __staticId : int = 0
+    __batterLowLevel : int = 5
+    __consecutivePolls : int = 1 #try to use criticalInterval instead (so no DoS happens)
+    __maximumSleepingTime : int = 5 #for threads waking up to check if manager is still running
 
-    def __init__(self, waterSensor, plants = []) -> None:
-        #type: (WaterSensor, list[Plants]) -> None
-        self.__id = PlantManager.__staticId + 1
+    def __init__(self, waterSensor : WaterSensor, plants : list[Plant] = []) -> None:
+        self.__id : int = PlantManager.__staticId + 1
         PlantManager.__staticId = PlantManager.__staticId + 1
-        self.__logger = _logger.getChild("PlantManager" + str(self.__id))
+        self.__logger : logging.Logger = _logger.getChild("PlantManager" + str(self.__id))
         self.__logger.info("Initializing plant manager...")
-        #type: (list[Plant]) -> None
-        self.__sensorsLock = threading.Lock()
-        self.__sensors = {} #type: dict[PlantSensor, list[Plant]] #plants sorted after sensors
-        self.__errorsLock = threading.Lock()
-        self.__errors = {} #type: dict[Plant, dict[str, float]] #errors for each plant
-        self.__criticalInterval = 900 #type: float #15 min #time that needs to pass in order for an error to be regarded as critical (action needed)
-        self.__pollInterval = 300 #type: float #5min
-        self.__sensorDataCacheLock = threading.Lock()
-        self.__sensorDataCache = {} #type: dict[PlantSensor, dict[str, object]]
-        self.__lastPollUpdate = -1 #type: float
-        self.__lastActionUpdate = -1 #type: float
+        self.__sensorsLock : threading.Lock = threading.Lock()
+        self.__sensors : dict[PlantSensor, list[Plant]] = {} #plants sorted after sensors
+        self.__errorsLock : threading.Lock = threading.Lock()
+        self.__errors : dict[Plant, dict[str, float]] = {} #errors for each plant
+        self.__criticalInterval : float = 900 #15 min #time that needs to pass in order for an error to be regarded as critical (action needed)
+        self.__pollInterval : float = 300 #5min
+        self.__sensorDataCacheLock : threading.Lock = threading.Lock()
+        self.__sensorDataCache : dict[PlantSensor, dict[str, object]] = {}
+        self.__lastPollUpdate : float = -1
+        self.__lastActionUpdate : float = -1
 
-        self.__onWaterError = {} #type: dict[PlantSensor, PlantEvent]
+        self.__onWaterError : dict[PlantSensor, PlantEvent] = {}
         #self.__onWaterError += PlantManager.ErrorFixByWateringPlant
 
-        self.__onBatteryError = {} #type: dict[PlantSensor, PlantEvent]
+        self.__onBatteryError : dict[PlantSensor, PlantEvent] = {}
         #self.__onBatteryError += PlantManager.ErrorFixByEmail
 
-        self.__onConductivityError = {} #type: dict[PlantSensor, PlantEvent]
+        self.__onConductivityError : dict[PlantSensor, PlantEvent] = {}
         #self.__onConductivityError += PlantManager.ErrorFixByEmail
 
-        self.__onTemperatureError = {} #type: dict[PlantSensor, PlantEvent]
+        self.__onTemperatureError : dict[PlantSensor, PlantEvent] = {}
         #self.__onTemperatureError += PlantManager.ErrorFixByEmail
 
-        self.__onLightError = {} #type: dict[PlantSensor, PlantEvent]
+        self.__onLightError : dict[PlantSensor, PlantEvent] = {}
         #self.__onLightError += PlantManager.ErrorFixByEmail
 
-        self.__waterSensor = waterSensor #type: WaterSensor
-        self.__isRunning = False #type: bool
-        self.__actionThread = None #type: threading.Thread
-        self.__pollThread = None #type: threading.Thread
-        self.__cancellationToken = None #type: threading.Event
-        self.__startedInDebugMode = False #type: bool
+        self.__waterSensor : WaterSensor = waterSensor
+        self.__isRunning : bool = False
+        self.__actionThread : threading.Thread = None
+        self.__pollThread : threading.Thread = None
+        self.__cancellationToken : threading.Event = None
+        self.__startedInDebugMode : bool = False
 
         for plant in plants:
             self.Add(plant)
         self.__logger.debug("Plant manager successfully initialized")
 
     @property
-    def PollInterval(self):
-        #type: () -> int
+    def PollInterval(self) -> int:
         return self.__pollInterval    
         
     @PollInterval.setter
-    def PollInterval(self, value):
-        #type: (int) -> None
+    def PollInterval(self, value : int) -> None:
         self.__pollInterval = value
     
     @property
-    def CriticalInterval(self):
-        #type: () -> int
+    def CriticalInterval(self) -> int:
         return self.__criticalInterval
 
     @CriticalInterval.setter
-    def CriticalInterval(self, value):
-        #type: (int) -> None
+    def CriticalInterval(self, value : int) -> None:
         self.__criticalInterval = value
 
     #TODO setter needed for "+= eventhandler"
-    def GetOnWaterError(self, plantSensor):
-        #type: (PlantSensor) -> None
+    def GetOnWaterError(self, plantSensor : PlantSensor) -> None:
         return self.__onWaterError[plantSensor]
 
-    def GetOnBatteryError(self, plantSensor):
-        #type: (PlantSensor) -> None
+    def GetOnBatteryError(self, plantSensor : PlantSensor) -> None:
         return self.__onBatteryError[plantSensor]
 
-    def GetOnConductivityError(self, plantSensor):
-        #type: (PlantSensor) -> None
+    def GetOnConductivityError(self, plantSensor : PlantSensor) -> None:
         return self.__onConductivityError[plantSensor]
 
-    def GetOnTemperatureError(self, plantSensor):
-        #type: (PlantSensor) -> None
+    def GetOnTemperatureError(self, plantSensor : PlantSensor) -> None:
         return self.__onTemperatureError[plantSensor]
 
-    def GetOnLightError(self, plantSensor):
-        #type: (PlantSensor) -> None
+    def GetOnLightError(self, plantSensor : PlantSensor) -> None:
         return self.__onLightError[plantSensor]
 
     @property
-    def WaterSensor(self):
-        #type: () -> WaterSensor
+    def WaterSensor(self) -> WaterSensor:
         return self.__waterSensor
 
     @property
-    def IsRunning(self):
-        #type: () -> bool
+    def IsRunning(self) -> bool:
         return self.__isRunning
 
     @property
-    def IsDebug(self):
+    def IsDebug(self) -> bool:
         global debugMode
-        #type: () -> bool
         return (debugMode and not self.IsRunning) or self.__startedInDebugMode
     
     @property
-    def Plants(self):
-        #type: () -> list[Plant]
+    def Plants(self) -> list[Plant]:
         plants = []
         with self.__sensorsLock:
             for sensor in self.__sensors:
@@ -142,16 +127,14 @@ class PlantManager:
         return plants
 
     @property
-    def Sensors(self):
-        #type: () -> list[PlantSensor]
+    def Sensors(self) -> list[PlantSensor]:
         sensors = []
         with self.__sensorsLock:
             sensors = list(self.__sensors.keys())
         return sensors
         
     @property
-    def Pumps(self):
-        #type: () -> list[Pump]
+    def Pumps(self) -> list[Pump]:
         pumps = []
         plants = self.Plants
 
@@ -161,8 +144,7 @@ class PlantManager:
 
         return pumps
 
-    def Add(self, plant):
-        #type: (Plant) -> None
+    def Add(self, plant : Plant) -> None:
         self.__logger.debug("Adding plant " + plant.PlantConfiguration.Name + " to plant manager...")
         plants = self.Plants
         if plant not in plants:
@@ -187,8 +169,7 @@ class PlantManager:
         else:
             self.__logger.critical("Could not add " + plant.PlantConfiguration.Name + " to plant manager, because it already exists")
 
-    def Remove(self, plant):
-        #type: (Plant) -> None
+    def Remove(self, plant : Plant) -> None:
         self.__logger.debug("Removing plant " + plant.PlantConfiguration.Name + " from plant manager")
         with self.__sensorsLock:
             if plant.PlantSensor in self.__sensors:
@@ -208,7 +189,7 @@ class PlantManager:
 
         self.__logger.info("Successfully removed plant " + plant.PlantConfiguration.Name + " from plant manager")
 
-    def Start(self):
+    def Start(self) -> None:
         if not self.IsRunning:
             self.__logger.debug("Starting...")
             if not debugMode:
@@ -225,7 +206,7 @@ class PlantManager:
             self.__isRunning = True
             self.__logger.info("Started")
 
-    def Stop(self):
+    def Stop(self) -> None:
         if self.IsRunning:
             self.__logger.debug("Stopping...")
             if not self.__startedInDebugMode:
@@ -241,7 +222,7 @@ class PlantManager:
             self.__isRunning = False
             self.__logger.info("Stopped")
 
-    def UpdatePoll(self):
+    def UpdatePoll(self) -> None:
         while not self.__cancellationToken.is_set():
             self.__logger.info("Plant manager starts new polling round...")
             t = time.time()
@@ -261,7 +242,7 @@ class PlantManager:
                     break
                 #date = time.localtime(t)
                 #dateString = str(date.tm_mday) + "." + str(date.tm_mon) + "." + str(date.tm_year) + " " + str(date.tm_hour) + ":" + str(date.tm_min) + ":" + str(date.tm_sec) + " " + str(date.tm_zone)
-                errorDict = {} #type: dict[str,float]
+                errorDict : dict[str,float] = {}
                 plantString = ""
                 dataString = ""
                 errorString = ""
@@ -328,7 +309,7 @@ class PlantManager:
         else:
             self.__logger.warning("Poll thread closed unexpectedly")
     
-    def UpdateAction(self):
+    def UpdateAction(self) -> None:
         #sleep for first time
         WakeableSleep(self.__cancellationToken,self.__criticalInterval)
         while not self.__cancellationToken.is_set():
@@ -345,8 +326,8 @@ class PlantManager:
             
             for sensor in currentSensors:
                 plants = currentSensors[sensor]
-                errors = {} #type: dict[str, dict[Plant, float]]
-                sensorData = {} #type: dict[str, object]
+                errors : dict[str, dict[Plant, float]] = {}
+                sensorData : dict[str, object] = {}
                 with self.__sensorDataCacheLock:
                     sensorData = self.__sensorDataCache[sensor]
 
@@ -421,18 +402,16 @@ class PlantManager:
         else:
             self.__logger.warning("Action thread closed unexpectedly")
 
-    def ErrorFixByEmail(plantEventData):
-        #type: (PlantEventData) -> None
+    def ErrorFixByEmail(plantEventData : PlantEventData) -> None:
         #TODO
         plantEventData.Logger.critical("Could not send email: Not Implemented")
 
-    def ErrorFixByWateringPlant(plantEventData):
-        #type: (PlantEventData) -> None
+    def ErrorFixByWateringPlant(plantEventData : PlantEventData) -> None:
         #TODO create errorPlantString for logging
         #TODO check if error is because underwatering else log info
         if plantEventData.Error == PSP.MOISTURE:
             #merge all different pumps by plants
-            pumpPlants = {} #type: dict[Pump, list[Plant]]
+            pumpPlants : dict[Pump, list[Plant]] = {}
             for plant in plantEventData.Plants:
                 if pumpPlants[plant.Pump] != None:
                     pumpPlants[plant.Pump].append(plant)
@@ -471,8 +450,7 @@ class PlantManager:
         else:
             plantEventData.Logger.warning("FAILSAFE: Not watering, because error type was " + plantEventData.Error + " instead of " + PSP.MOISTURE)
 
-    def __onPlantChanged(self, plant, oldValue, newValue, type):
-        #type: (Plant, object, object, str) -> None
+    def __onPlantChanged(self, plant : Plant, oldValue : object, newValue : object, type : str) -> None:
         if type == Plant.EVENTTYPE_PLANTSENSOR:
             newValue.__class__ = PlantSensor
             oldValue.__class__ = PlantSensor

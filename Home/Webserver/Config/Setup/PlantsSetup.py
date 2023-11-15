@@ -20,11 +20,11 @@ class PlantModule(ServerModule):
     def __init__(self) -> None:
         if PlantModule.TryGet() == None:
             super().__init__()
-            self.__plantManager = None #type: PlantManager
-            self.__systemModule = None #type: SystemModule
-            self.__bluetoothModule = None #type: BluetoothModule
-            self.__gpioModule = None #type: GPIOModule
-            self.__plantsSaveFile = "plants.json"
+            self.__plantManager : PlantManager = None
+            self.__systemModule : SystemModule = None
+            self.__bluetoothModule : BluetoothModule = None
+            self.__gpioModule : GPIOModule = None
+            self.__plantsSaveFile : str = "plants.json"
 
     def OnSave(self, saveFolderPath : str) -> None:
         #TODO use SQL
@@ -32,7 +32,6 @@ class PlantModule(ServerModule):
         #TODO use valid json
         if not self.__plantManager.IsDebug:
             saveFolderPath = saveFolderPath.rstrip("/").rstrip("\\")
-            #type: (str) -> None
             data = []
             plants = self.__plantManager.Plants
             for plant in plants:
@@ -86,9 +85,9 @@ class PlantModule(ServerModule):
                 data.append(json.loads(line))
             file.close()
 
-            plants = [] #type: list[Plant]
-            sensors = [] #type: list[PlantSensor]
-            pumps = [] #type: list[Pump]
+            plants : list[Plant] = []
+            sensors : list[PlantSensor] = []
+            pumps : list[Pump] = []
 
             for d in data:
                 currentSensor = None
@@ -168,8 +167,7 @@ class PlantModule(ServerModule):
         self.__plantsServiceDeletePlantFile = self.__plantServicePlantsFile.AddNewChildFile("delete")
         self.__plantsServiceDeletePlantFile.Bind(VirtualFileHandler(METHOD_POST, TYPE_JSONFILE,self.__deletePlant))
 
-    def __plantmanagerStatus(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __plantmanagerStatus(self, file : VirtualFile, request : ServerRequest) -> str:
         data = {}
         data["running"] = False
         data["debug"] = False
@@ -185,8 +183,7 @@ class PlantModule(ServerModule):
             }
         return json.dumps(data)
 
-    def __plantmanagerSwitch(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __plantmanagerSwitch(self, file : VirtualFile, request : ServerRequest) -> str:
         global PlantManagerDebugMode
 
         if self.__plantManager != None:
@@ -209,10 +206,9 @@ class PlantModule(ServerModule):
 
         return self.__plantmanagerStatus(file, request)
 
-    def __plantmanagerPlants(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __plantmanagerPlants(self, file : VirtualFile, request : ServerRequest) -> str:
         plants = {}
-        plants["plants"] = [] #type:list[Plant]
+        plants["plants"] : list[Plant] = []
         plants["error"] = self.__systemModule.NoErrorResponse
 
         if self.__plantManager != None:
@@ -261,16 +257,15 @@ class PlantModule(ServerModule):
 
         return json.dumps(plants)
 
-    def __addPlant(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __addPlant(self, file : VirtualFile, request : ServerRequest) -> str:
         output = {}
         output["error"] = self.__systemModule.NoErrorResponse
         if not self.__plantManager.IsRunning:
             data = json.loads(request.Data)
             
-            plantConfiguration = None #type: PlantConfiguration
-            sensor = None #type: PlantSensor
-            pump = None #type: Pump
+            plantConfiguration : PlantConfiguration = None
+            sensor : PlantSensor = None
+            pump : Pump = None
 
             #TODO check vars
             try:
@@ -361,14 +356,13 @@ class PlantModule(ServerModule):
         return json.dumps(output)
 
     #TODO allow partial changes
-    def __changePlant(self, file, request):
-    #type: (VirtualFile, ServerRequest) -> str
+    def __changePlant(self, file : VirtualFile, request : ServerRequest) -> str:
         output = {}
         output["error"] = self.__systemModule.NoErrorResponse
         if not self.__plantManager.IsRunning:
             data = json.loads(request.Data)
 
-            plant = None #type: Plant
+            plant : Plant = None
             if "filter" in request.GetParameters:
                 found = False
                 value = str(request.GetParameters["filter"][0])
@@ -378,9 +372,9 @@ class PlantModule(ServerModule):
                         found = True
                         break
                 if found:
-                    plantConfiguration = None #type: PlantConfiguration
-                    sensor = None #type: PlantSensor
-                    pump = None #type: Pump
+                    plantConfiguration : PlantConfiguration = None
+                    sensor : PlantSensor = None
+                    pump : Pump = None
 
                     #TODO check other vars
                     try:
@@ -480,12 +474,11 @@ class PlantModule(ServerModule):
             }  
         return json.dumps(output)
 
-    def __deletePlant(self, file, request):
-        #type: (VirtualFile, ServerRequest) -> str
+    def __deletePlant(self, file : VirtualFile, request : ServerRequest) -> str:
         output = {}
         output["error"] = self.__systemModule.NoErrorResponse
         if not self.__plantManager.IsRunning:
-            plant = None #type: Plant
+            plant : Plant = None
             if "filter" in request.GetParameters:
                 found = False
                 value = str(request.GetParameters["filter"][0])

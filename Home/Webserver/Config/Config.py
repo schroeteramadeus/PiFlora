@@ -20,7 +20,7 @@ class _ConfigEncoder:
 class _ConfigDecoder:
     def decode(jsonData):
         try:
-            jsonData = json.loads(jsonData) #type: dict[str]
+            jsonData : dict[str] = json.loads(jsonData)
             if _ConfigEncoder.SERIALIZATIONTYPE in jsonData:
                 if jsonData[_ConfigEncoder.SERIALIZATIONTYPE] == Config.__name__:
                     jsonData["RootFile"] = VirtualFile(None, jsonData["RootFile"])
@@ -77,7 +77,7 @@ class Config:
         self.SSLKeyFile = sslKeyFile
         self.SSLCertFile = sslCertFile
 
-        self.__configFile = configFile #type: str
+        self.__configFile : str = configFile
 
         self.__load()
         
@@ -92,9 +92,7 @@ class Config:
     def SSLCertPath(self):
         return self.SSLPath + "/" + self.SSLCertFile
         
-    def __load(self):
-        #type: (str) -> Config
-        
+    def __load(self) -> None:       
         if os.path.exists(self.__configFile) and os.path.isfile(self.__configFile):
             file = open(self.__configFile, "rt")
             try:
@@ -112,8 +110,7 @@ class Config:
             finally:
                 file.close()
 
-    def Save(self):
-        #type: (str) -> None
+    def Save(self) -> None:
         file = None
 
         if not (os.path.exists(self.__configFile)):
