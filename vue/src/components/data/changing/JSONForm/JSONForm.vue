@@ -42,7 +42,7 @@ function submit(){
           let keys:[] = p["keys"];
 
           var recursiveHelperJsonData = jsonData;
-          for(var y = 0; y < keys.length; y++){
+          for(var y = 0; y < keys.length - 1; y++){
             if(recursiveHelperJsonData[keys[y]] == undefined)
               recursiveHelperJsonData[keys[y]] = {};
             recursiveHelperJsonData = recursiveHelperJsonData[keys[y]];

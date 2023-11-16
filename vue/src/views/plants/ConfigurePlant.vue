@@ -14,6 +14,7 @@ import {defineDataStore} from "@/stores/DataStore"
 
 const configStore = useConfigStore();
 const logStore = useLogStore();
+const plantStore = defineDataStore(configStore.plantManagerConfig.getPlantUrl).get();
 
 const gpioPumpStore = defineDataStore(configStore.gpioConfig.allGpiosUrl).get();
 const mifloraPlantSensorStore = defineDataStore(configStore.bluetoothConfig.allDevicesUrl + "?" + configStore.plantManagerConfig.plantNameFilterParam + "=" + configStore.plantManagerConfig.plantManagerBluetoothFilter).get();
@@ -21,16 +22,38 @@ const mifloraPlantSensorStore = defineDataStore(configStore.bluetoothConfig.allD
 //TODO load pumps and sensors 
 
 const PLANTIDPARAM : string = configStore.plantManagerConfig.plantIdParameter
-const postUrl = configStore.plantManagerConfig.addPlantUrl;
-
+const postUrl = ref();
 let showForm = ref(false);
 
-let params = getURIParameters();
-
-let oldPlantName : string | null = params.get(PLANTIDPARAM);
-
-let submitted = false;
-
+let formInitialData = ref({
+    configuration: {
+        name: "",
+        temperature: {
+            max: 100,
+            min: 50
+        },
+        moisture: {
+            max: 100,
+            min: 50
+        },
+        light: {
+            max: 100,
+            min: 50
+        },
+        conductivity: {
+            max: 100,
+            min: 50
+        }
+    },
+    pump: {
+        type: null,
+        id: null,
+    },
+    sensor:{
+        type: null,
+        id: null
+    }
+});
 
 function HTMLElementToInputElement(el : HTMLElement | null) : HTMLInputElement | null {
     if(el != null)
@@ -61,34 +84,46 @@ function updatePlant(dataElement : HTMLElement, plantName : string, readyFunc = 
     xhttp.send();
 }
 function loadPlant(plantName : string){
-    var table = document.getElementById('dataTable');
-    //logStore.log('Loading plant: ' + oldPlantName);
+    //TODO fix
+    plantStore.update();
+    var data = plantStore.data.data["plants"];
 
-    if(table != null){
-        updatePlant(table, plantName, (success : boolean, message : string)=>{
-            if(success){
-                var sensorTypesSelect = document.getElementById('sensorTypes') as HTMLSelectElement;
-                var pumpTypesSelect = document.getElementById('pumpTypes') as HTMLSelectElement;
-                var sensorType = HTMLElementToInputElement(document.getElementById('sensorType'))?.value;
-                var pumpType = HTMLElementToInputElement(document.getElementById('pumpType'))?.value;
-
-                success = selectValue(sensorTypesSelect, sensorType);
-                if(success){
-                    success = selectValue(pumpTypesSelect, pumpType);
-                    if(success){
-                        success = false;
-                        if(sensorType == configStore.pythonTypes.plantSensor.miFlora){
-                            success = selectValue(document.getElementById('miFloraPlantSensors') as HTMLSelectElement, HTMLElementToInputElement(document.getElementById('sensorId'))?.value);
-                        }
-                        if(success){
-                            success = false;
-                            if(pumpType == configStore.pythonTypes.waterPump.gpio){
-                                success = selectValue(document.getElementById('gpioPumps') as HTMLSelectElement, HTMLElementToInputElement(document.getElementById('pumpId'))?.value);
-                            }
-                        }
-                    }
-                }
+    var oldPlantData = data.find((dataRow : { [x: string]: any; }) => {
+        return dataRow['configuration']['name'] == plantName;
+    });
+    formInitialData.value = {
+        configuration: {
+            name: oldPlantData['configuration']['name'],
+            temperature: {
+                max: oldPlantData['configuration']['temperature']['max'],
+                min: oldPlantData['configuration']['temperature']['min']
+            },
+            moisture: {
+                max: oldPlantData['configuration']['moisture']['max'],
+                min: oldPlantData['configuration']['moisture']['min']
+            },
+            light: {
+                max: oldPlantData['configuration']['light']['max'],
+                min: oldPlantData['configuration']['light']['min']
+            },
+            conductivity: {
+                max: oldPlantData['configuration']['conductivity']['max'],
+                min: oldPlantData['configuration']['conductivity']['min']
             }
+        },
+        pump: {
+            type: oldPlantData['pump']['type'],
+            id: oldPlantData['pump']['id']
+        },
+        sensor:{
+            type: oldPlantData['sensor']['type'],
+            id: oldPlantData['sensor']['id']
+        }
+    };
+    //TODO log on error and redirect, show table on success
+
+    showTable();
+    /*
             if(!success){
                 logStore.logError("Loading Plant '" + plantName + "'", message)
                 //console.log('Could not load plant data for: ' + OLDPLANTNAME);
@@ -100,7 +135,7 @@ function loadPlant(plantName : string){
             }
         })
     }
-   
+   */
 }
 
 function showTable(){
@@ -261,18 +296,20 @@ function onSubmit(success : boolean, errorMessage : string){
 }
 
 onMounted(() => {
-    if(oldPlantName != null){
+    let params = getURIParameters();
+    let oldPlantName : string | null = params.get(PLANTIDPARAM);
+
+    if(oldPlantName != null){      
+        postUrl.value = configStore.plantManagerConfig.changePlantUrl + "?" + configStore.plantManagerConfig.plantNameFilterParam + "=" + oldPlantName;
         loadPlant(oldPlantName);
+        
     }else{
+        postUrl.value = configStore.plantManagerConfig.addPlantUrl;
         showTable();
     }
     gpioPumpStore.update();
     mifloraPlantSensorStore.update();
-    //console.log(gpioPumpStore.data);
-    console.log(mifloraPlantSensorStore.data.data['devices']);
-    console.log(mifloraPlantSensorStore.data.data['devices'][0]);
 })
-
 
 //TODO load sensors and pumps
 </script>
@@ -280,58 +317,66 @@ onMounted(() => {
 <template>
     <PlantMenu>
         <h1>New Plant</h1>
-        <div style="display:hidden;">
-            <span id="oldSensorID" style="display:hidden;" data-poll="plant_sensor_id" data-poll-populate="innerHTML"></span>
-            <span id="oldSensorType" style="display:hidden;" data-poll="plant_sensor_type" data-poll-populate="innerHTML"></span>
-            
-            <span id="oldPumpID" style="display:hidden;" data-poll="plant_pump_id" data-poll-populate="innerHTML"></span>
-            <span id="oldPumpType" style="display:hidden;" data-poll="plant_pump_type" data-poll-populate="innerHTML"></span>   
-        </div>
         <br />
-        <!--TODO-->
         <JSONForm :post-url=postUrl v-if="showForm" :on-send=onSubmit>
             <JSONFormElement :data="() => {return getData('plant_name');}" :keys="['configuration', 'name']">
                 <label for="plant_name">Name</label>
-                <input id="plant_name" placeholder="Enter name..." value="" />
+                <input id="plant_name" placeholder="Enter name..." :value=formInitialData.configuration.name />
             </JSONFormElement>
             <JSONFormElement :data="() => {return {min: getData('plant_temperature_min'), max: getData('plant_temperature_max')};}" :keys="['configuration', 'temperature']">
                 <label>Temperature Span</label>
-                <input id="plant_temperature_min" value="50" />
-                <input id="plant_temperature_max" value="100" />
+                <input id="plant_temperature_min" :value=formInitialData.configuration.temperature.min />
+                <input id="plant_temperature_max" :value=formInitialData.configuration.temperature.max />
             </JSONFormElement>
             <JSONFormElement :data="() => {return {min: getData('plant_moisture_min'), max: getData('plant_moisture_max')};}" :keys="['configuration', 'moisture']">
                 <label>Moisture Span</label>
-                <input id="plant_moisture_min" value="50" />
-                <input id="plant_moisture_max" value="100" />
+                <input id="plant_moisture_min" :value=formInitialData.configuration.moisture.min />
+                <input id="plant_moisture_max" :value=formInitialData.configuration.moisture.max />
             </JSONFormElement>
             <JSONFormElement :data="() => {return {min: getData('plant_light_min'), max: getData('plant_light_max')};}" :keys="['configuration', 'light']">
                 <label>Light Span</label>
-                <input id="plant_light_min" value="50" />
-                <input id="plant_light_max" value="100" />
+                <input id="plant_light_min" :value=formInitialData.configuration.light.min />
+                <input id="plant_light_max" :value=formInitialData.configuration.light.max />
             </JSONFormElement>
             <JSONFormElement :data="() => {return {min: getData('plant_conductivity_min'), max: getData('plant_conductivity_max')};}" :keys="['configuration', 'conductivity']">
                 <label>Conductivity Span</label>
-                <input id="plant_conductivity_min" value="50" />
-                <input id="plant_conductivity_max" value="100" />
+                <input id="plant_conductivity_min" :value=formInitialData.configuration.conductivity.min />
+                <input id="plant_conductivity_max" :value=formInitialData.configuration.conductivity.max />
             </JSONFormElement>
             <JSONFormElement :data="() => {return {type: getData('sensorTypes'), id: getData('miFloraPlantSensors')};}" :keys="['sensor']">
                 <label>Sensor</label>
                 <select id="sensorTypes">
                     <!--TODO add other sensor type select and polling info-->
-                    <option id="sensorTypeMiFloraPlantSensor" :value=configStore.pythonTypes.plantSensor.miFlora selected="true">MiFlora Plantsensor</option>
+                    <option id="sensorTypeMiFloraPlantSensor" 
+                        :value=configStore.pythonTypes.plantSensor.miFlora 
+                        :selected="formInitialData.sensor.type == configStore.pythonTypes.plantSensor.miFlora">
+                        MiFlora Plantsensor
+                    </option>
                 </select>
                 <select id="miFloraPlantSensors" @change="event => updateSelect(eventTargetToElement(event.target) as HTMLSelectElement, 'color')">
-                    <option v-for="mifloraSensor in mifloraPlantSensorStore.data.data['devices']" id="sensorOption" :value="mifloraSensor['mac']">{{mifloraSensor['name'] + " (" + mifloraSensor['mac'] + ")"}}</option>
+                    <option v-for="mifloraSensor in mifloraPlantSensorStore.data.data['devices']" 
+                        id="sensorOption" 
+                        :value="mifloraSensor['mac']" 
+                        :selected="formInitialData.sensor.id == mifloraSensor['mac']" >
+                        {{mifloraSensor['name'] + " (" + mifloraSensor['mac'] + ")"}}
+                    </option>
                 </select>
             </JSONFormElement>
             <JSONFormElement :data="() => {return {type: getData('pumpTypes'), id: getData('gpioPumps')};}" :keys="['pump']">
                 <label>Pump</label>
                 <select id="pumpTypes">
                     <!--TODO add other sensor type select and polling info-->
-                    <option :value=configStore.pythonTypes.waterPump.gpio selected="true">GPIO Pump</option>
+                    <option :value=configStore.pythonTypes.waterPump.gpio 
+                        :selected="formInitialData.pump.type == configStore.pythonTypes.waterPump.gpio">
+                        GPIO Pump
+                    </option>
                 </select>
                 <select id="gpioPumps" @change="event => updateSelect(eventTargetToElement(event.target) as HTMLSelectElement, 'color')">
-                    <option v-for="gpioPump in gpioPumpStore.data.data['gpios']" :value="gpioPump['port']">{{"Port " + gpioPump['port']}}</option>
+                    <option v-for="gpioPump in gpioPumpStore.data.data['gpios']" 
+                        :value="gpioPump['port']" 
+                        :selected="formInitialData.pump.id == gpioPump['port']" >
+                        {{"Port " + gpioPump['port']}}
+                        </option>
                 </select>
             </JSONFormElement>
         </JSONForm>

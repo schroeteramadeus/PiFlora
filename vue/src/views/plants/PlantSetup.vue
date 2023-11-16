@@ -6,12 +6,32 @@ import { useLogStore } from '@/stores/LogStore';
 import {eventTargetToElement} from '@/assets/js/lib'
 import { useConfigStore } from '@/stores/ConfigStore';
 import StartStop from '@/components/data/changing/StartStop.vue';
+import { defineDataStore } from '@/stores/DataStore';
+import { onMounted, onUnmounted } from 'vue';
+import { switchDisplay } from '@/assets/js/lib';
 
 
 const logStore = useLogStore();
 const configStore = useConfigStore();
+
+const plantStore = defineDataStore(configStore.plantManagerConfig.getPlantUrl).get();
+
 const PLANTIDPARAM = configStore.plantManagerConfig.plantIdParameter;
 
+const plantConfigureUrl = "/plantmanager/plants/configure";
+
+//console.log(configStore.plantManagerConfig.getPlantUrl);
+//console.log(plantStore.data.data);
+
+
+
+onMounted(() => {
+    plantStore.update();
+    plantStore.setUpdateInterval(plantStore.update, 5000);
+})
+onUnmounted(()=>{
+    plantStore.clearUpdateInterval();
+})
 
 </script>
 
@@ -23,7 +43,7 @@ const PLANTIDPARAM = configStore.plantManagerConfig.plantIdParameter;
         <div class="center">
             <StartStop :switch-url=configStore.plantManagerConfig.switchUrl :status-url=configStore.plantManagerConfig.statusUrl />
         </div>
-        <input type="button" @click="event => router.push('/plantmanager/plants/configure')" value="New plant"/>
+        <input type="button" @click="event => router.push(plantConfigureUrl)" value="New plant"/>
         <br />
 
         <h1>Current setup</h1>
@@ -45,22 +65,28 @@ const PLANTIDPARAM = configStore.plantManagerConfig.plantIdParameter;
                 </tr>
             </thead>
             <tbody id="setupTable_body" class="maxWidth">
-                <tr id="plantConfig" style="display:none;" data-poll-index="data_configuration_name">
-                    <td><span data-poll="data_configuration_name" data-poll-populate="innerHTML">ERROR</span></td>
-                    <td><span data-poll="data_configuration_light_min" data-poll-populate="innerHTML">ERROR</span>-<span data-poll="data_configuration_light_max" data-poll-populate="innerHTML">ERROR</span></td>
-                    <td><span data-poll="data_configuration_moisture_min" data-poll-populate="innerHTML">ERROR</span>-<span data-poll="data_configuration_moisture_max" data-poll-populate="innerHTML">ERROR</span></td>
-                    <td><span data-poll="data_configuration_conductivity_min" data-poll-populate="innerHTML">ERROR</span>-<span data-poll="data_configuration_conductivity_max" data-poll-populate="innerHTML">ERROR</span></td>
-                    <td><span data-poll="data_configuration_temperature_min" data-poll-populate="innerHTML">ERROR</span>-<span data-poll="data_configuration_temperature_max" data-poll-populate="innerHTML">ERROR</span></td>
-                    <td data-poll="data_sensor_id" data-poll-populate="innerHTML">
-                        ERROR
-                    </td>
-                    <td data-poll="data_pump_id" data-poll-populate="innerHTML">
-                        ERROR
+                <tr v-for="plant in plantStore.data.data['plants']" id="plantConfig">
+                    <td><span>{{ plant['configuration']['name'] }}</span></td>
+                    <td><span>{{ plant['configuration']['light']['min'] }}</span>-<span>{{ plant['configuration']['light']['max'] }}</span></td>
+                    <td><span>{{ plant['configuration']['moisture']['min'] }}</span>-<span>{{ plant['configuration']['moisture']['max'] }}</span></td>
+                    <td><span>{{ plant['configuration']['conductivity']['min'] }}</span>-<span>{{ plant['configuration']['conductivity']['max'] }}</span></td>
+                    <td><span>{{ plant['configuration']['temperature']['min'] }}</span>-<span>{{ plant['configuration']['temperature']['max'] }}</span></td>
+                    <td>
+                        <!--TODO add type-->
+                        {{ plant['sensor']['id'] }}
                     </td>
                     <td>
-                        <a @click="event => router.push({path: '/plantmanager/plants/configure', query: {PLANTIDPARAM: eventTargetToElement(event.target)?.parentElement?.parentElement?.querySelector('[data-poll=data_configuration_name]')?.innerHTML}})" ><i class="fa-solid fa-gear"></i></a>
+                        <!--TODO add type-->
+                        {{ plant['pump']['id'] }}
+                    </td>
+                    <td>
+                        <!--eventTargetToElement(event.target)?.parentElement?.parentElement?.querySelector('[data-poll=data_configuration_name]')?.innerHTML-->
+                        <!--see https://stackoverflow.com/questions/10640159/key-for-javascript-dictionary-is-not-stored-as-value-but-as-variable-name-->
+                        <a @click="event => router.push({path: plantConfigureUrl, query: {[PLANTIDPARAM]: plant['configuration']['name']}})" ><i class="fa-solid fa-gear"></i></a>
                         </td>
                     <td>
+                        <!--TODO fix switchDisplay, deletePlant-->
+                        <!--TODO create switch button / confirm button as modular component-->
                         <a id="trashButton" onclick="
                             var el = this;
                             var confirmEl = el.parentElement.querySelector('#trashButtonConfirm');
@@ -74,10 +100,10 @@ const PLANTIDPARAM = configStore.plantManagerConfig.plantIdParameter;
                         "><i class="fa-solid fa-trash-can"></i></a>
 
                         <a id="trashButtonConfirm" onclick="
-                            deletePlant(this.parentElement.parentElement.querySelector('[data-poll=data_configuration_name]').innerHTML);
+                            deletePlant(plant['configuration']['name']);
                             //TODO show success / delete plant?
-                            var row = this.parentElement.parentElement;
-                            row.remove();
+                            //var row = this.parentElement.parentElement;
+                            //row.remove();
                         " style="display:none;"><i class="fa-solid fa-trash-can-arrow-up"></i></a>
                     </td>
                 </tr>
