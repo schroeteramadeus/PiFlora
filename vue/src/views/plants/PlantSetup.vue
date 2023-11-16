@@ -58,19 +58,19 @@ onUnmounted(()=>{
                 </tr>
                 <tr>
                     <th>Name</th>
-                    <th>Light span</th>
-                    <th>Moisture span</th>
-                    <th>Conductvity span</th>
                     <th>Temperature span</th>
+                    <th>Moisture span</th>
+                    <th>Light span</th>
+                    <th>Conductvity span</th>
                 </tr>
             </thead>
             <tbody id="setupTable_body" class="maxWidth">
                 <tr v-for="plant in plantStore.data.data['plants']" id="plantConfig">
-                    <td><span>{{ plant['configuration']['name'] }}</span></td>
-                    <td><span>{{ plant['configuration']['light']['min'] }}</span>-<span>{{ plant['configuration']['light']['max'] }}</span></td>
-                    <td><span>{{ plant['configuration']['moisture']['min'] }}</span>-<span>{{ plant['configuration']['moisture']['max'] }}</span></td>
-                    <td><span>{{ plant['configuration']['conductivity']['min'] }}</span>-<span>{{ plant['configuration']['conductivity']['max'] }}</span></td>
+                    <td><span>{{ plant['configuration']['name'] }}</span></td>                    
                     <td><span>{{ plant['configuration']['temperature']['min'] }}</span>-<span>{{ plant['configuration']['temperature']['max'] }}</span></td>
+                    <td><span>{{ plant['configuration']['moisture']['min'] }}</span>-<span>{{ plant['configuration']['moisture']['max'] }}</span></td>
+                    <td><span>{{ plant['configuration']['light']['min'] }}</span>-<span>{{ plant['configuration']['light']['max'] }}</span></td>
+                    <td><span>{{ plant['configuration']['conductivity']['min'] }}</span>-<span>{{ plant['configuration']['conductivity']['max'] }}</span></td>
                     <td>
                         <!--TODO add type-->
                         {{ plant['sensor']['id'] }}
